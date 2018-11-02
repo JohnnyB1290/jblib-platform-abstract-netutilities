@@ -88,7 +88,7 @@ void UDP_Channel_t::udp_recv_fn(void* arg, struct udp_pcb* pcb, struct pbuf* p, 
 	{
 		while(p_next != NULL)
 		{
-			UDP_ch_instance_ptr->call_interface_ptr->channel_callback((uint8_t*)p->payload, p->len, UDP_ch_instance_ptr, NULL);
+			UDP_ch_instance_ptr->call_interface_ptr->channel_callback((uint8_t*)p_next->payload, p_next->len, UDP_ch_instance_ptr, NULL);
 			p_next = p_next->next;
 		}
 	}
