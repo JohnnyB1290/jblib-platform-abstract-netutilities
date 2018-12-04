@@ -47,6 +47,7 @@ typedef enum
 	speed_10Mbit = 0,
 	speed_100Mbit = 1,
 	speed_autoneg = 2,
+	speed_1000Mbit = 3,
 }Ethernet_speed_t;
 
 
