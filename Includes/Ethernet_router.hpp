@@ -22,6 +22,12 @@
 #include "netif/etharp.h"
 #include "arch/ethernetif.h"
 
+typedef enum{
+	LWIP_MS_CALL = 0,
+	LWIP_LINK_CHECK_CALL = 1,
+	ROUTE_FRAMES_CALL = 2
+}EthRouterCallType;
+
 class Ethernet_router_t:public Callback_Interface_t
 {
 public:
@@ -35,9 +41,13 @@ public:
 	void Delete_Ethernet_listener(Ethernet_listener_t* listener, Ethernet_t* Eth_interface_ptr);
 	void Delete_Ethernet_listener(Ethernet_listener_t* listener);
 	virtual void void_callback(void* Intf_ptr, void* parameters);
+	void setParsePeriodUs(uint32_t parsePeriodUs);
 private:
 	Ethernet_router_t(void);
-	static void LWIP_ms_timer_Handler(void);
+	void routeFrames(void);
+
+	uint32_t parsePeriodUs;
+
 	static C_void_callback_t* LWIP_ms_call_interface_ptr;
 	static Ethernet_router_t* Router_ptr;
 	static Ethernet_t* Interface_ptrs[ETH_ROUTER_NUM_OF_NETWORK_INTF];

@@ -8,7 +8,6 @@
 #include "Ethernet_router.hpp"
 #include "CONTROLLER.hpp"
 
-
 Ethernet_router_t* Ethernet_router_t::Router_ptr = (Ethernet_router_t*)NULL;
 Ethernet_t* Ethernet_router_t::Interface_ptrs[ETH_ROUTER_NUM_OF_NETWORK_INTF];
 Arp_updater_t* Ethernet_router_t::Arp_updater_ptrs[ETH_ROUTER_NUM_OF_NETWORK_INTF];
@@ -20,7 +19,6 @@ struct netif Ethernet_router_t::LWIP_netif[ETH_ROUTER_NUM_OF_NETWORK_INTF];
 C_void_callback_t* Ethernet_router_t::LWIP_ms_call_interface_ptr;
 uint8_t Ethernet_router_t::NRT_Timer_num = 0;
 
-
 Ethernet_router_t* Ethernet_router_t::get_Ethernet_router(void)
 {
 	if(Ethernet_router_t::Router_ptr == (Ethernet_router_t*)NULL) Ethernet_router_t::Router_ptr = new Ethernet_router_t();
@@ -31,34 +29,34 @@ Ethernet_router_t::Ethernet_router_t(void)
 {
 	for(uint8_t i=0; i<ETH_ROUTER_NUM_OF_NETWORK_INTF; i++)
 	{
-		for(uint8_t j=0; j< ETH_ROUTER_NUM_OF_LISTENERS; j++) Ethernet_router_t::listeners[i][j] = (Ethernet_listener_t*)NULL;
+		for(uint8_t j=0; j< ETH_ROUTER_NUM_OF_LISTENERS; j++)
+			Ethernet_router_t::listeners[i][j] = (Ethernet_listener_t*)NULL;
 	}
+	this->parsePeriodUs = 100;
 	LWIP_DEBUGF(LWIP_DBG_ON, ("Starting LWIP Lib\n\r"));
 	lwip_init();
-	Ethernet_router_t::LWIP_ms_call_interface_ptr = new C_void_callback_t(Ethernet_router_t::LWIP_ms_timer_Handler);
-	CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Lowest_priority_delay, 1000, Ethernet_router_t::LWIP_ms_call_interface_ptr, NULL);
+	CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Lowest_priority_delay, 1000, this, (void*)LWIP_MS_CALL);
+	CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Lowest_priority_delay, 1000000, this, (void*)LWIP_LINK_CHECK_CALL);
+}
+
+void Ethernet_router_t::setParsePeriodUs(uint32_t parsePeriodUs){
+	this->parsePeriodUs = parsePeriodUs;
 }
 
 void Ethernet_router_t::Start(uint8_t NRT_Timer_num)
 {
 	Ethernet_router_t::NRT_Timer_num = NRT_Timer_num;
 	if(Ethernet_router_t::NRT_Timer_num != 255)
-		CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,1000,this,NULL);
+		CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,1000,this,(void*)ROUTE_FRAMES_CALL);
 }
 
 struct netif* Ethernet_router_t::get_LWIP_netif(Ethernet_t* Eth_interface_ptr)
 {
-	for(uint8_t i=0; i<ETH_ROUTER_NUM_OF_NETWORK_INTF; i++)
-	{
-		if(Ethernet_router_t::Interface_ptrs[i] == Eth_interface_ptr) return &Ethernet_router_t::LWIP_netif[i];
+	for(uint8_t i=0; i<ETH_ROUTER_NUM_OF_NETWORK_INTF; i++){
+		if(Ethernet_router_t::Interface_ptrs[i] == Eth_interface_ptr)
+			return &Ethernet_router_t::LWIP_netif[i];
 	}
 	return (struct netif*)NULL;
-}
-
-void Ethernet_router_t::LWIP_ms_timer_Handler(void)
-{
-	LWIPTimer_Handler();
-	CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Lowest_priority_delay, 1000, Ethernet_router_t::LWIP_ms_call_interface_ptr, NULL);
 }
 
 void Ethernet_router_t::Add_Ethernet_interface(Ethernet_t* Eth_interface_ptr, uint8_t* IP, uint8_t* GW, uint8_t* NETMASK)
@@ -89,23 +87,48 @@ void Ethernet_router_t::Add_Ethernet_interface(Ethernet_t* Eth_interface_ptr, ui
 	this->Add_Ethernet_listener(Ethernet_router_t::Arp_updater_ptrs[Ethernet_router_t::interfaces_count - 1],Eth_interface_ptr);
 }
 
-
 void Ethernet_router_t::void_callback(void* Intf_ptr, void* parameters)
 {
-	uint8_t link;
+	if((Ethernet_router_t::NRT_Timer_num == 255) && Intf_ptr == CONTROLLER_t::get_CONTROLLER()){
+		this->routeFrames();
+		return;
+	}
+	else if(Intf_ptr == CONTROLLER_t::get_Time_Engine()){
+		Time_engine_callback_param_t* paramStrPtr = (Time_engine_callback_param_t*)parameters;
+		if((Ethernet_router_t::NRT_Timer_num == paramStrPtr->TE_module_num) &&
+				(paramStrPtr->data == (void*)ROUTE_FRAMES_CALL)){
+			this->routeFrames();
+			return;
+		}
+		else if(paramStrPtr->TE_module_num == Lowest_priority_delay){
+			if(paramStrPtr->data == (void*)LWIP_MS_CALL){
+				LWIPTimer_Handler();
+				CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Lowest_priority_delay, 1000, this, (void*)LWIP_MS_CALL);
+				return;
+			}
+			else if(paramStrPtr->data == (void*)LWIP_LINK_CHECK_CALL){
+				uint8_t link = 0;
+				for(uint8_t i = 0; i < Ethernet_router_t::interfaces_count; i++){
+					Ethernet_router_t::Interface_ptrs[i]->GetParameter(LINK_param,&link);
+					if(link == 0) netif_set_link_down(&Ethernet_router_t::LWIP_netif[i]);
+					else netif_set_link_up(&Ethernet_router_t::LWIP_netif[i]);
+				}
+				CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Lowest_priority_delay, 1000000, this, (void*)LWIP_LINK_CHECK_CALL);
+				return;
+			}
+		}
+	}
+}
 
+void Ethernet_router_t::routeFrames(void){
 	if(Ethernet_router_t::interfaces_count == 0)
 	{
 		if(Ethernet_router_t::NRT_Timer_num != 255)
-			CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,100000,this,NULL);
+			CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,100000,this,(void*)ROUTE_FRAMES_CALL);
 		return;
 	}
 	for(uint8_t i = 0; i<Ethernet_router_t::interfaces_count; i++)
 	{
-		Ethernet_router_t::Interface_ptrs[i]->GetParameter(LINK_param,&link);
-		if(link == 0) netif_set_link_down(&Ethernet_router_t::LWIP_netif[i]);
-		else netif_set_link_up(&Ethernet_router_t::LWIP_netif[i]);
-
 		Ethernet_router_t::In_Frame_size = Ethernet_router_t::Interface_ptrs[i]->Pull_out_RX_Frame(&Ethernet_router_t::In_Frame);
 		if(Ethernet_router_t::In_Frame_size != 0)
 		{
@@ -120,16 +143,12 @@ void Ethernet_router_t::void_callback(void* Intf_ptr, void* parameters)
 				}
 			}
 		}
-
 	}
 	/* LWIP timers - ARP, DHCP, TCP, etc. */
 	sys_check_timeouts();
 
 	if(Ethernet_router_t::NRT_Timer_num != 255)
-	{
-		if(Ethernet_router_t::In_Frame_size != 0) CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,100,this,NULL);
-		else CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,1000,this,NULL);
-	}
+		CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,this->parsePeriodUs,this,(void*)ROUTE_FRAMES_CALL);
 }
 
 Arp_updater_t* Ethernet_router_t::Get_ARP_Updater(Ethernet_t* Eth_interface_ptr)
