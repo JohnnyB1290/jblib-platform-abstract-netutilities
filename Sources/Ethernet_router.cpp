@@ -132,7 +132,9 @@ void Ethernet_router_t::routeFrames(void){
 		Ethernet_router_t::In_Frame_size = Ethernet_router_t::Interface_ptrs[i]->Pull_out_RX_Frame(&Ethernet_router_t::In_Frame);
 		if(Ethernet_router_t::In_Frame_size != 0)
 		{
+			__disable_irq();
 			lwip_ethernetif_input(&Ethernet_router_t::LWIP_netif[i],&Ethernet_router_t::In_Frame,Ethernet_router_t::In_Frame_size);
+			__enable_irq();
 			for(uint8_t j=0; j<ETH_ROUTER_NUM_OF_LISTENERS; j++ )
 			{
 				if(Ethernet_router_t::listeners[i][j] == (Ethernet_listener_t*)NULL) break;
@@ -145,8 +147,10 @@ void Ethernet_router_t::routeFrames(void){
 		}
 	}
 	/* LWIP timers - ARP, DHCP, TCP, etc. */
+	__disable_irq();
 	sys_check_timeouts();
-
+	__enable_irq();
+			
 	if(Ethernet_router_t::NRT_Timer_num != 255)
 		CONTROLLER_t::get_Time_Engine()->NRT_setEvent(Ethernet_router_t::NRT_Timer_num,this->parsePeriodUs,this,(void*)ROUTE_FRAMES_CALL);
 }
