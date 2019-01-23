@@ -31,6 +31,12 @@ public:
 	virtual void Add_to_TX_queue(struct pbuf* p) = 0;
 #endif
 	virtual uint16_t Pull_out_RX_Frame(EthernetFrame* Frame) = 0;
+
+	uint32_t txFramesCnt;
+	uint32_t txBytesCnt;
+	uint32_t rxFramesCnt;
+	uint32_t rxBytesCnt;
+	uint32_t errorsCnt;
 };
 
 typedef enum
