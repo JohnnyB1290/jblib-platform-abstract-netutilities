@@ -288,3 +288,17 @@ void Eth_utilities_t::Mask_ip(uint8_t* IP, uint8_t* mask)
 	IP[2] &= mask[2];
 	IP[3] &= mask[3];
 }
+
+int Eth_utilities_t::compareIp(uint8_t* ip1, uint8_t* ip2, uint8_t* mask){
+	uint8_t tmpIp1[4];
+	uint8_t tmpIp2[4];
+
+	memcpy(tmpIp1, ip1, 4);
+	memcpy(tmpIp2, ip2, 4);
+
+	Eth_utilities_t::Mask_ip(tmpIp1, mask);
+	Eth_utilities_t::Mask_ip(tmpIp2, mask);
+
+	return memcmp(tmpIp1, tmpIp2, 4);
+}
+

@@ -92,6 +92,7 @@ public:
 	static void eth_network_checksumadjust(uint8_t *chksum, uint8_t *optr, uint16_t olen, uint8_t *nptr, uint16_t nlen);
 	static void Change_Dest_Src_IP(uint8_t* Frame, uint8_t* New_DIP, uint8_t* New_SIP);
 	static void Mask_ip(uint8_t* IP, uint8_t* mask);
+	static int compareIp(uint8_t* ip1, uint8_t* ip2, uint8_t* mask);
 
 	static uint16_t ip_id;
 };
