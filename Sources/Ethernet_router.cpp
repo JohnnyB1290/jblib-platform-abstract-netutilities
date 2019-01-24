@@ -16,7 +16,6 @@ EthernetFrame Ethernet_router_t::In_Frame;
 uint16_t Ethernet_router_t::In_Frame_size = 0;
 Ethernet_listener_t* Ethernet_router_t::listeners[ETH_ROUTER_NUM_OF_NETWORK_INTF][ETH_ROUTER_NUM_OF_LISTENERS];
 struct netif Ethernet_router_t::LWIP_netif[ETH_ROUTER_NUM_OF_NETWORK_INTF];
-C_void_callback_t* Ethernet_router_t::LWIP_ms_call_interface_ptr;
 uint8_t Ethernet_router_t::NRT_Timer_num = 0;
 
 Ethernet_router_t* Ethernet_router_t::get_Ethernet_router(void)

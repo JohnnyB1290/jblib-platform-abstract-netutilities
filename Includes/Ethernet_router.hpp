@@ -48,7 +48,6 @@ private:
 
 	uint32_t parsePeriodUs;
 
-	static C_void_callback_t* LWIP_ms_call_interface_ptr;
 	static Ethernet_router_t* Router_ptr;
 	static Ethernet_t* Interface_ptrs[ETH_ROUTER_NUM_OF_NETWORK_INTF];
 	static struct netif LWIP_netif[ETH_ROUTER_NUM_OF_NETWORK_INTF];
