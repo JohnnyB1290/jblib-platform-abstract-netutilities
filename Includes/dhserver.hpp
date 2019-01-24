@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "stdlib.h"
-#include "Ethernet_router.hpp"
 #include "lwip/udp.h"
 
 
@@ -81,7 +80,7 @@ typedef struct
 class DHCP_Server_t
 {
 public:
-	DHCP_Server_t(Ethernet_t* Ethernet_iface_ptr,uint8_t start_ip, uint8_t ip_count);
+	DHCP_Server_t(struct netif* LWIP_netif_ptr,uint8_t start_ip, uint8_t ip_count);
 	~DHCP_Server_t();
 private:
 	dhcp_entry_t* entry_by_ip(uint8_t* ip);

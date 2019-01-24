@@ -10,9 +10,9 @@
 #include "lwip/igmp.h"
 
 
-UDP_Channel_t::UDP_Channel_t(uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, Ethernet_t* Eth_interface_ptr):void_channel_t()
+UDP_Channel_t::UDP_Channel_t(uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, struct netif* Netif_ptr):void_channel_t()
 {
-	this->Constructor(NULL, SRC_PORT, DST_IP, DST_PORT, Eth_interface_ptr);
+	this->Constructor(NULL, SRC_PORT, DST_IP, DST_PORT, Netif_ptr);
 }
 
 UDP_Channel_t::UDP_Channel_t(uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT):void_channel_t()
@@ -20,12 +20,12 @@ UDP_Channel_t::UDP_Channel_t(uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PO
 	this->Constructor(NULL, SRC_PORT, DST_IP, DST_PORT, NULL);
 }
 
-UDP_Channel_t::UDP_Channel_t(uint8_t* SRC_IP, uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, Ethernet_t* Eth_interface_ptr):void_channel_t()
+UDP_Channel_t::UDP_Channel_t(uint8_t* SRC_IP, uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, struct netif* Netif_ptr):void_channel_t()
 {
-	this->Constructor(SRC_IP, SRC_PORT, DST_IP, DST_PORT, Eth_interface_ptr);
+	this->Constructor(SRC_IP, SRC_PORT, DST_IP, DST_PORT, Netif_ptr);
 }
 
-void UDP_Channel_t::Constructor(uint8_t* SRC_IP, uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, Ethernet_t* Eth_interface_ptr)
+void UDP_Channel_t::Constructor(uint8_t* SRC_IP, uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, struct netif* Netif_ptr)
 {
 	this->p_tx = NULL;
 	if(SRC_IP != NULL) IP4_ADDR(&this->src_ipaddr, SRC_IP[0], SRC_IP[1], SRC_IP[2], SRC_IP[3]);
@@ -38,8 +38,7 @@ void UDP_Channel_t::Constructor(uint8_t* SRC_IP, uint16_t SRC_PORT, uint8_t* DST
 
 	this->DST_PORT = DST_PORT;
 
-	if(Eth_interface_ptr != (Ethernet_t*)NULL) this->Netif_ptr = Ethernet_router_t::get_Ethernet_router()->get_LWIP_netif(Eth_interface_ptr);
-	else this->Netif_ptr = (netif*)NULL;
+	this->Netif_ptr = Netif_ptr;
 
 #if LWIP_IGMP == 1
 	if(ip4_addr_ismulticast(&this->dst_ipaddr)) igmp_joingroup(&this->src_ipaddr,&this->dst_ipaddr);

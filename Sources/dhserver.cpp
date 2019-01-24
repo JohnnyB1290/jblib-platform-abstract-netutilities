@@ -75,10 +75,10 @@ enum DHCP_OPTIONS
 char DHCP_Server_t::magic_cookie[4] = {0x63,0x82,0x53,0x63};
 
 
-DHCP_Server_t::DHCP_Server_t(Ethernet_t* Ethernet_iface_ptr,uint8_t start_ip, uint8_t ip_count)
+DHCP_Server_t::DHCP_Server_t(struct netif* LWIP_netif_ptr,uint8_t start_ip, uint8_t ip_count)
 {
 	this->pcb = (struct udp_pcb*)NULL;
-	this->LWIP_netif_ptr = Ethernet_router_t::get_Ethernet_router()->get_LWIP_netif(Ethernet_iface_ptr);
+	this->LWIP_netif_ptr = LWIP_netif_ptr;
 
 	this->config.addr[0] = (this->LWIP_netif_ptr->ip_addr.addr & 0xff);
 	this->config.addr[1] = (this->LWIP_netif_ptr->ip_addr.addr >> 8) & 0xff;

@@ -72,12 +72,12 @@ typedef struct dns_answer
 #pragma pack(pop)
 
 
-DNS_server_t::DNS_server_t(Ethernet_t* Ethernet_iface_ptr)
+DNS_server_t::DNS_server_t(struct netif* LWIP_netif_ptr)
 {
 	err_t err;
 
 	this->pcb = (struct udp_pcb*)NULL;
-	this->LWIP_netif_ptr = Ethernet_router_t::get_Ethernet_router()->get_LWIP_netif(Ethernet_iface_ptr);
+	this->LWIP_netif_ptr = LWIP_netif_ptr;
 
 	udp_init();
 	this->pcb = udp_new();

@@ -35,7 +35,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "stdlib.h"
-#include "Ethernet_router.hpp"
 #include "lwip/udp.h"
 
 typedef struct dns_query
@@ -49,7 +48,7 @@ typedef struct dns_query
 class DNS_server_t
 {
 public:
-	DNS_server_t(Ethernet_t* Ethernet_iface_ptr);
+	DNS_server_t(struct netif* LWIP_netif_ptr);
 	~DNS_server_t(void);
 private:
 	int parse_next_query(void *data, int size, dns_query_t *query);

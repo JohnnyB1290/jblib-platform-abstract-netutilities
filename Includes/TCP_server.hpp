@@ -9,8 +9,8 @@
 #define TCP_SERVER_HPP_
 
 #include "Void_Channel.hpp"
-#include "Ethernet_router.hpp"
-
+#include "lwip/ip_addr.h"
+#include "lwip/netif.h"
 
 class TCP_server_t:public void_channel_t
 {
