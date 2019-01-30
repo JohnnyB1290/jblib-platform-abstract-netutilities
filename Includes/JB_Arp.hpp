@@ -22,11 +22,15 @@ typedef struct {
 	uint16_t total_ip_num;
 }IP_table_for_arp_t;
 
+typedef struct{
+	uint8_t ip[ETX_PROTO_SIZE]; // IP
+	uint8_t mac[ETX_HW_SIZE]; 	//MAC
+	uint32_t timeRecord;		//time of last arp update
+}ArpTableLine_t;
+
 typedef struct {
-	uint8_t ip[ETX_ARP_TABLE_MAX_NUMBER][ETX_PROTO_SIZE]; // IP
-	uint8_t mac[ETX_ARP_TABLE_MAX_NUMBER][ETX_HW_SIZE]; //MAC
-	uint32_t time_records[ETX_ARP_TABLE_MAX_NUMBER];//time of last arp update
-	uint16_t total_ip_num;// number of records arp table
+	uint16_t recordCnt;// number of records arp table
+	ArpTableLine_t line[ETX_ARP_TABLE_MAX_NUMBER];
 }arp_table_t;
 #pragma pack(pop)
 
@@ -37,6 +41,7 @@ public:
 	virtual ~Arp_updater_t(void);
 	virtual void Parse_frame(EthernetFrame* frame_ptr,uint16_t frame_size, Ethernet_t* Eth_adapter_ptr, void* Parameter);
 	void Send_arp_request(uint8_t* IP_d);
+	void Send_arp_request(uint8_t* IP_d, uint8_t* ipSrc);
 	void Add_ip_in_ip_table_for_arp(uint8_t* IP);
 	bool Is_ip_in_ip_table_for_arp(uint8_t* IP);
 	bool Get_MAC_from_IP(uint8_t* IP, uint8_t* MAC);

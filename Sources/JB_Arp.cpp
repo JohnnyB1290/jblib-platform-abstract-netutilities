@@ -108,22 +108,25 @@ void Arp_updater_t::Parse_frame(EthernetFrame* frame_ptr,uint16_t frame_size, Et
 
 				if(arp_index >= 0)//record find -> update
 				{
-					memcpy((uint8_t*)(this->arp_table.mac[arp_index]),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
-					this->arp_table.time_records[arp_index] = 0;
+					memcpy((uint8_t*)(this->arp_table.line[arp_index].mac),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
+					this->arp_table.line[arp_index].timeRecord = 0;
 				}
 				else // records not find -> create new record
 				{
-					arp_index = this->arp_table.total_ip_num;
-					memcpy((uint8_t*)(this->arp_table.mac[arp_index]),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
-					memcpy((uint8_t*)(this->arp_table.ip[arp_index]),&(In_Frame_ptr[ETX_ARP_SENDER_IP_OFFSET]),ETX_PROTO_SIZE);
-					this->arp_table.time_records[arp_index] = 0;
-					this->arp_table.total_ip_num++;
+					arp_index = this->arp_table.recordCnt;
+					memcpy((uint8_t*)(this->arp_table.line[arp_index].mac),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
+					memcpy((uint8_t*)(this->arp_table.line[arp_index].ip),&(In_Frame_ptr[ETX_ARP_SENDER_IP_OFFSET]),ETX_PROTO_SIZE);
+					this->arp_table.line[arp_index].timeRecord = 0;
+					this->arp_table.recordCnt++;
 					#ifdef Arp_console
 					#ifdef USE_CONSOLE
 					char* Adapter_name;
 					this->Eth_adapter_ptr->GetParameter(name_param, (void*)&Adapter_name);
 					printf("%s Arp reply. Create record for ip ",Adapter_name);
-					printf("%i.%i.%i.%i\r\n\r\n", this->arp_table.ip[arp_index][0],this->arp_table.ip[arp_index][1],this->arp_table.ip[arp_index][2],this->arp_table.ip[arp_index][3]);
+					printf("%i.%i.%i.%i\r\n\r\n", this->arp_table.line[arp_index].ip[0],
+							this->arp_table.line[arp_index].ip[1],
+							this->arp_table.line[arp_index].ip[2],
+							this->arp_table.line[arp_index].ip[3]);
 					#endif
 					#endif
 				}
@@ -140,16 +143,16 @@ void Arp_updater_t::Parse_frame(EthernetFrame* frame_ptr,uint16_t frame_size, Et
 				arp_index = this->get_index_arp_table_from_ip((uint8_t*)&(In_Frame_ptr[ETX_ARP_SENDER_IP_OFFSET]));// find arp records from table
 				if(arp_index >= 0)//record find -> update
 				{
-					memcpy((uint8_t*)(this->arp_table.mac[arp_index]),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
-					this->arp_table.time_records[arp_index] = 0;
+					memcpy((uint8_t*)(this->arp_table.line[arp_index].mac),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
+					this->arp_table.line[arp_index].timeRecord = 0;
 				}
 				else // records not find -> create new record
 				{
-					arp_index = this->arp_table.total_ip_num;
-					memcpy((uint8_t*)(this->arp_table.mac[arp_index]),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
-					memcpy((uint8_t*)(this->arp_table.ip[arp_index]),&(In_Frame_ptr[ETX_ARP_SENDER_IP_OFFSET]),ETX_PROTO_SIZE);
-					this->arp_table.time_records[arp_index] = 0;
-					this->arp_table.total_ip_num++;
+					arp_index = this->arp_table.recordCnt;
+					memcpy((uint8_t*)(this->arp_table.line[arp_index].mac),&(In_Frame_ptr[ETX_ARP_SENDER_MAC_OFFSET]),ETX_HW_SIZE);
+					memcpy((uint8_t*)(this->arp_table.line[arp_index].ip),&(In_Frame_ptr[ETX_ARP_SENDER_IP_OFFSET]),ETX_PROTO_SIZE);
+					this->arp_table.line[arp_index].timeRecord = 0;
+					this->arp_table.recordCnt++;
 					#ifdef Arp_console
 					#ifdef USE_CONSOLE
 					char* Adapter_name;
@@ -157,7 +160,10 @@ void Arp_updater_t::Parse_frame(EthernetFrame* frame_ptr,uint16_t frame_size, Et
 					printf("%s Arp reqest for ip ",Adapter_name);
 					printf("%i.%i.%i.%i\r\n", In_Frame_ptr[ETX_ARP_TARGET_IP_OFFSET+0],In_Frame_ptr[ETX_ARP_TARGET_IP_OFFSET+1],In_Frame_ptr[ETX_ARP_TARGET_IP_OFFSET+2],In_Frame_ptr[ETX_ARP_TARGET_IP_OFFSET+3]);
 					printf("Create record for ip ");
-					printf("%i.%i.%i.%i\r\n\r\n", this->arp_table.ip[arp_index][0],this->arp_table.ip[arp_index][1],this->arp_table.ip[arp_index][2],this->arp_table.ip[arp_index][3]);
+					printf("%i.%i.%i.%i\r\n\r\n", this->arp_table.line[arp_index].ip[0],
+							this->arp_table.line[arp_index].ip[1],
+							this->arp_table.line[arp_index].ip[2],
+							this->arp_table.line[arp_index].ip[3]);
 					#endif
 					#endif
 				}
@@ -168,8 +174,15 @@ void Arp_updater_t::Parse_frame(EthernetFrame* frame_ptr,uint16_t frame_size, Et
 	}
 }
 
-void Arp_updater_t::Send_arp_request(uint8_t* IP_d)
-{
+
+
+void Arp_updater_t::Send_arp_request(uint8_t* IP_d){
+
+	this->Send_arp_request(IP_d, NULL);
+}
+
+void Arp_updater_t::Send_arp_request(uint8_t* IP_d, uint8_t* ipSrc){
+
 	EthernetFrame* Out_Frame_ptr;
 	uint16_t* Out_frame_size_ptr;
 	static uint8_t* My_MAC_ptr;
@@ -179,9 +192,15 @@ void Arp_updater_t::Send_arp_request(uint8_t* IP_d)
 	Out_frame_size_ptr = (uint16_t*)malloc_s(sizeof(uint16_t));
 	if((Out_Frame_ptr == (EthernetFrame*)NULL) || (Out_frame_size_ptr == (uint16_t*)NULL)) return;
 
-	for(uint8_t i=0; i< this->ip_table.total_ip_num; i++)
-	{
-		this->create_etx_arp_request(IP_d, My_MAC_ptr,(uint8_t*)this->ip_table.ip[i], (uint8_t*)Out_Frame_ptr, Out_frame_size_ptr);
+	if(ipSrc == NULL){
+		for(uint8_t i=0; i< this->ip_table.total_ip_num; i++)
+		{
+			this->create_etx_arp_request(IP_d, My_MAC_ptr,(uint8_t*)this->ip_table.ip[i], (uint8_t*)Out_Frame_ptr, Out_frame_size_ptr);
+			this->Eth_adapter_ptr->Add_to_TX_queue(Out_Frame_ptr,*Out_frame_size_ptr);
+		}
+	}
+	else{
+		this->create_etx_arp_request(IP_d, My_MAC_ptr, ipSrc, (uint8_t*)Out_Frame_ptr, Out_frame_size_ptr);
 		this->Eth_adapter_ptr->Add_to_TX_queue(Out_Frame_ptr,*Out_frame_size_ptr);
 	}
 
@@ -209,11 +228,11 @@ bool Arp_updater_t::Is_ip_in_ip_table_for_arp(uint8_t* IP)
 /* return index of records mac_table with IP, or -1 if recods nof find*/
 int16_t Arp_updater_t::get_index_arp_table_from_ip(uint8_t* IP)
 {
-	if(this->arp_table.total_ip_num == 0) return -1;
+	if(this->arp_table.recordCnt == 0) return -1;
 
-	for(int16_t index = 0; index<this->arp_table.total_ip_num; index++)
+	for(int16_t index = 0; index < this->arp_table.recordCnt; index++)
 	{
-		if(memcmp(IP,this->arp_table.ip[index],ETX_PROTO_SIZE)==0) return index;
+		if(memcmp(IP,this->arp_table.line[index].ip,ETX_PROTO_SIZE)==0) return index;
 	}
 	return -1;
 }
@@ -224,7 +243,7 @@ bool Arp_updater_t::Get_MAC_from_IP(uint8_t* IP, uint8_t* MAC)
 	index = this->get_index_arp_table_from_ip(IP);
 	if(index>=0)
 	{
-		memcpy(MAC, this->arp_table.mac[index],ETX_HW_SIZE);
+		memcpy(MAC, this->arp_table.line[index].mac,ETX_HW_SIZE);
 		return true;
 	}
 	else return false;
@@ -232,13 +251,13 @@ bool Arp_updater_t::Get_MAC_from_IP(uint8_t* IP, uint8_t* MAC)
 
 bool Arp_updater_t::Get_IP_from_MAC(uint8_t* MAC, uint8_t* IP)
 {
-	if(this->arp_table.total_ip_num == 0) return false;
+	if(this->arp_table.recordCnt == 0) return false;
 
-	for(uint16_t index = 0; index<this->arp_table.total_ip_num; index++)
+	for(uint16_t index = 0; index < this->arp_table.recordCnt; index++)
 	{
-		if(memcmp(MAC,this->arp_table.mac[index],ETX_HW_SIZE)==0)
+		if(memcmp(MAC,this->arp_table.line[index].mac,ETX_HW_SIZE)==0)
 		{
-			memcpy(IP, this->arp_table.ip[index],ETX_PROTO_SIZE);
+			memcpy(IP, this->arp_table.line[index].ip,ETX_PROTO_SIZE);
 			return true;
 		}
 	}
@@ -247,30 +266,35 @@ bool Arp_updater_t::Get_IP_from_MAC(uint8_t* MAC, uint8_t* IP)
 
 void Arp_updater_t::void_callback(void* Intf_ptr, void* parameters)
 {
-	if(this->arp_table.total_ip_num > 0)
+	if(this->arp_table.recordCnt > 0)
 	{
-		for(uint16_t i = 0; i<(this->arp_table.total_ip_num); i++)
+		for(uint16_t i = 0; i < this->arp_table.recordCnt; i++)
 		{
-			this->arp_table.time_records[i]++;
-			if(this->arp_table.time_records[i] > ETX_ARP_REFRESH_RECORDS_TIME_s)
+			this->arp_table.line[i].timeRecord++;
+			if(this->arp_table.line[i].timeRecord > ETX_ARP_REFRESH_RECORDS_TIME_s)
 			{
-				this->Send_arp_request((uint8_t*)(this->arp_table.ip[i]));
+				this->Send_arp_request((uint8_t*)(this->arp_table.line[i].ip));
 			}
-			if(this->arp_table.time_records[i] > ETX_ARP_DELETE_RECORDS_TIME_s)
+			if(arp_table.line[i].timeRecord > ETX_ARP_DELETE_RECORDS_TIME_s)
 			{
 				#ifdef Arp_console
 				#ifdef USE_CONSOLE
 				char* Adapter_name;
 				this->Eth_adapter_ptr->GetParameter(name_param, (void*)&Adapter_name);
 				printf("%s Arp table delete record for ip ",Adapter_name);
-				printf("%i.%i.%i.%i\r\n", this->arp_table.ip[i][0],this->arp_table.ip[i][1],this->arp_table.ip[i][2],this->arp_table.ip[i][3]);
+				printf("%i.%i.%i.%i\r\n", this->arp_table.line[i].ip[0],
+						this->arp_table.line[i].ip[1],
+						this->arp_table.line[i].ip[2],
+						this->arp_table.line[i].ip[3]);
 				#endif
 				#endif
-				if(i != (this->arp_table.total_ip_num-1))
+				if(i != (this->arp_table.recordCnt-1))
 				{
-					memmove((uint8_t*)(this->arp_table.ip[i]), (uint8_t*)(this->arp_table.ip[i+1]), sizeof(ETX_PROTO_SIZE)*(this->arp_table.total_ip_num - 1 - i));
+					memmove((uint8_t*)(&this->arp_table.line[i]),
+							(uint8_t*)(&this->arp_table.line[i+1]),
+							sizeof(ArpTableLine_t) * (this->arp_table.recordCnt - 1 - i));
 				}
-				this->arp_table.total_ip_num -- ;
+				this->arp_table.recordCnt -- ;
 			}
 		}
 	}

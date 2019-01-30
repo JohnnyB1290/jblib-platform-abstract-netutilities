@@ -11,8 +11,8 @@ Eth_queue_t::Eth_queue_t(uint16_t queue_size)
 	this->Initialized = 0;
 	this->queue_size = queue_size;
 	if(this->queue_size == 0) return;
-	this->Frames_buf_ptr = (EthernetFrame*)malloc(sizeof(EthernetFrame)*queue_size);
-	this->frame_size_buf_ptr = (uint16_t*)malloc(sizeof(uint16_t)*queue_size);
+	this->Frames_buf_ptr = (EthernetFrame*)malloc_s(sizeof(EthernetFrame)*queue_size);
+	this->frame_size_buf_ptr = (uint16_t*)malloc_s(sizeof(uint16_t)*queue_size);
 	if((this->Frames_buf_ptr == (EthernetFrame*)NULL) || (this->frame_size_buf_ptr == (uint16_t*)NULL)) return;
 	this->bw = 0;
 	this->br = 0;
