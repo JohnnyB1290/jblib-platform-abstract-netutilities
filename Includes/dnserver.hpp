@@ -36,6 +36,7 @@
 #include <string.h>
 #include "stdlib.h"
 #include "lwip/udp.h"
+#include "Defines.h"
 
 typedef struct dns_query
 {
