@@ -65,5 +65,4 @@ public:
 	virtual void Parse_frame(EthernetFrame* frame_ptr,uint16_t frame_size, Ethernet_t* Eth_adapter_ptr, void* Parameter) = 0;
 };
 
-
 #endif /* VOID_ETHERNET_HPP_ */

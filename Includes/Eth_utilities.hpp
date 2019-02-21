@@ -5,8 +5,8 @@
  *      Author: Stalker1290
  */
 
-#ifndef SRC_ETH_UTILITIES_HPP_
-#define SRC_ETH_UTILITIES_HPP_
+#ifndef ETH_UTILITIES_HPP_
+#define ETH_UTILITIES_HPP_
 
 
 #include "stdbool.h"
@@ -99,4 +99,4 @@ public:
 
 
 
-#endif /* SRC_ETH_UTILITIES_HPP_ */
+#endif /* ETH_UTILITIES_HPP_ */

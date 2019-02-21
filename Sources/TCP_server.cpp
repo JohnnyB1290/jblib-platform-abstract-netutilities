@@ -9,6 +9,7 @@
 #include "lwip/tcp.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "string.h"
 
 
 TCP_server_t::TCP_server_t(uint8_t* SRC_IP, uint16_t SRC_PORT):void_channel_t()

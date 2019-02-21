@@ -24,6 +24,7 @@
 
 
 #include "dhserver.hpp"
+#include "Defines.h"
 
 /* DHCP message type */
 #define DHCP_DISCOVER       1

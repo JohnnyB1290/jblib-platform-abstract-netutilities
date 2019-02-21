@@ -8,6 +8,7 @@
 #include "UDP_channel.hpp"
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
+#include "string.h"
 
 
 UDP_Channel_t::UDP_Channel_t(uint16_t SRC_PORT, uint8_t* DST_IP, uint16_t DST_PORT, struct netif* Netif_ptr):void_channel_t()
