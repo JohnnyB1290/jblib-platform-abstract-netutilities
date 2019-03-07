@@ -28,6 +28,7 @@
 #define ETX_ETH_D_MAC_OFFSET 		(0)
 #define ETX_ETH_S_MAC_OFFSET 		(6)
 #define ETX_ETH_ETHER_TYPE_OFFSET 	(12)
+#define ETX_ETH_CHECKSUM_SIZE		(4)
 
 
 #define ETX_ARP_BODY_LEN (28)
