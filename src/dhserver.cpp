@@ -255,7 +255,7 @@ void DHCP_Server_t::udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *
 	ptr = NULL;
 	entry = NULL;
 	
-	int n = p->len;
+	uint16_t n = p->len;
 	if (n > sizeof(dhcpServer_ptr->dhcp_data)) n = sizeof(dhcpServer_ptr->dhcp_data);
 	memcpy(&dhcpServer_ptr->dhcp_data, p->payload, n);
 	switch (dhcpServer_ptr->dhcp_data.dp_options[2])
