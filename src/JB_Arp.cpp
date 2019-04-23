@@ -1,9 +1,12 @@
 /*
  * JB_Arp.cpp
  *
- *  Created on: 19.10.2017 ã.
+ *  Created on: 19.10.2017 ï¿½.
  *      Author: Stalker1290
  */
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include "JB_Arp.hpp"
 #include "CONTROLLER.hpp"
@@ -189,8 +192,12 @@ void Arp_updater_t::Send_arp_request(uint8_t* IP_d, uint8_t* ipSrc){
 
 	this->Eth_adapter_ptr->GetParameter(MAC_param,(void*)&My_MAC_ptr);
 	Out_Frame_ptr = (EthernetFrame*)malloc_s(sizeof(EthernetFrame));
+	if(Out_Frame_ptr == (EthernetFrame*)NULL) return;
 	Out_frame_size_ptr = (uint16_t*)malloc_s(sizeof(uint16_t));
-	if((Out_Frame_ptr == (EthernetFrame*)NULL) || (Out_frame_size_ptr == (uint16_t*)NULL)) return;
+	if(Out_frame_size_ptr == (uint16_t*)NULL){
+		free_s(Out_Frame_ptr);
+		return;
+	}
 
 	if(ipSrc == NULL){
 		for(uint8_t i=0; i< this->ip_table.total_ip_num; i++)

@@ -32,11 +32,11 @@ public:
 #endif
 	virtual uint16_t Pull_out_RX_Frame(EthernetFrame* Frame) = 0;
 
-	uint32_t txFramesCnt;
-	uint32_t txBytesCnt;
-	uint32_t rxFramesCnt;
-	uint32_t rxBytesCnt;
-	uint32_t errorsCnt;
+	uint32_t txFramesCnt = 0;
+	uint32_t txBytesCnt = 0;
+	uint32_t rxFramesCnt = 0;
+	uint32_t rxBytesCnt = 0;
+	uint32_t errorsCnt = 0;
 };
 
 typedef enum

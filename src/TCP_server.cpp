@@ -4,6 +4,9 @@
  *  Created on: 31.10.2017
  *      Author: Stalker1290
  */
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include "TCP_server.hpp"
 #include "lwip/tcp.h"
@@ -157,10 +160,7 @@ err_t TCP_server_t::Recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t 
 		#endif
 		#endif
 		/* cleanup, for unkown reason */
-		if (p != NULL)
-		{
-			pbuf_free(p);
-		}
+		pbuf_free(p);
 		ret_err = err;
 	}
 	else if(ss->state == ES_ACCEPTED)

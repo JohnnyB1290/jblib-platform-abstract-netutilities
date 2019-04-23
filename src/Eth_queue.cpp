@@ -1,9 +1,13 @@
 /*
  * Eth_queue.cpp
  *
- *  Created on: 18.10.2017 ã.
+ *  Created on: 18.10.2017 ï¿½.
  *      Author: Stalker1290
  */
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
+
 #include "Eth_queue.hpp"
 
 Eth_queue_t::Eth_queue_t(uint16_t queue_size)

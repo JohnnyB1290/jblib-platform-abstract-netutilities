@@ -4,6 +4,9 @@
  *  Created on: 27.10.2017
  *      Author: Stalker1290
  */
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+
+// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include "UDP_channel.hpp"
 #include "lwip/udp.h"
