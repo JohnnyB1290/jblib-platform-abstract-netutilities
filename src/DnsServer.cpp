@@ -1,7 +1,8 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 by Sergey Fetisov <fsenok@gmail.com>
+ * Copyright © 2015 by Sergey Fetisov <fsenok@gmail.com>
+ * Copyright © 2019 Evgeniy Ivanov. Contacts: <strelok1290@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,7 +32,11 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-#include "dnserver.hpp"
+#include <string.h>
+#include "DnsServer.hpp"
+
+namespace jblib::ethutilities
+{
 
 #pragma pack(push, 1)
 typedef struct
@@ -57,12 +62,16 @@ typedef struct
 #endif
 } dns_header_flags_t;
 
+
+
 typedef struct
 {
 	uint16_t id;
 	dns_header_flags_t flags;
 	uint16_t n_record[4];
 } dns_header_t;
+
+
 
 typedef struct dns_answer
 {
@@ -76,47 +85,41 @@ typedef struct dns_answer
 #pragma pack(pop)
 
 
-DNS_server_t::DNS_server_t(struct netif* LWIP_netif_ptr)
+
+DnsServer::DnsServer(struct netif* netifStruct)
 {
-	err_t err;
-
-	this->pcb = (struct udp_pcb*)NULL;
-	this->LWIP_netif_ptr = LWIP_netif_ptr;
-
+	this->netifStruct_ = netifStruct;
 	udp_init();
-	this->pcb = udp_new();
-	if (this->pcb == NULL) return;
-
-	udp_recv(this->pcb, DNS_server_t::udp_recv_proc, this);
-
-	err = udp_bind(this->pcb, &this->LWIP_netif_ptr->ip_addr, 53);
-	if (err != ERR_OK)
-	{
-		udp_remove(this->pcb);
-		this->pcb = NULL;
+	this->pcb_ = udp_new();
+	if (this->pcb_ == NULL)
+		return;
+	udp_recv(this->pcb_, udp_recv_proc, this);
+	err_t err = udp_bind(this->pcb_, &this->netifStruct_->ip_addr, 53);
+	if (err != ERR_OK) {
+		udp_remove(this->pcb_);
+		this->pcb_ = NULL;
 		return;
 	}
 }
 
-DNS_server_t::~DNS_server_t(void)
+
+
+DnsServer::~DnsServer(void)
 {
-	if (this->pcb == NULL) return;
-	udp_remove(this->pcb);
-	this->pcb = NULL;
+	if (this->pcb_ == NULL)
+		return;
+	udp_remove(this->pcb_);
+	this->pcb_ = NULL;
 }
 
-int DNS_server_t::parse_next_query(void *data, int size, dns_query_t *query)
+
+
+int DnsServer::parse_next_query(void *data, int size, dns_query_t *query)
 {
-	int len;
-	int lables;
-	uint8_t *ptr;
-
-	len = 0;
-	lables = 0;
-	ptr = (uint8_t *)data;
-
-	while (true)
-	{
+	int len = 0;
+	int lables = 0;
+	uint8_t* ptr = (uint8_t *)data;
+	while (true) {
 		uint8_t lable_len;
 		if (size <= 0) return -1;
 		lable_len = *ptr++;
@@ -124,11 +127,11 @@ int DNS_server_t::parse_next_query(void *data, int size, dns_query_t *query)
 		if (lable_len == 0) break;
 		if (lables > 0)
 		{
-			if (len == DNS_MAX_HOST_NAME_LEN) return -2;
+			if (len == DNS_SERVER_HOST_NAME_MAX_SIZE) return -2;
 			query->name[len++] = '.';
 		}
 		if (lable_len > size) return -1;
-		if (len + lable_len >= DNS_MAX_HOST_NAME_LEN) return -2;
+		if (len + lable_len >= DNS_SERVER_HOST_NAME_MAX_SIZE) return -2;
 		memcpy(&query->name[len], ptr, lable_len);
 		len += lable_len;
 		ptr += lable_len;
@@ -145,9 +148,12 @@ int DNS_server_t::parse_next_query(void *data, int size, dns_query_t *query)
 	return ptr - (uint8_t *)data;
 }
 
-void DNS_server_t::udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port)
+
+
+void DnsServer::udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p,
+		const ip_addr_t *addr, u16_t port)
 {
-	DNS_server_t* dnsServer_ptr = (DNS_server_t*)arg;
+	DnsServer* dnsServer_ptr = (DnsServer*)arg;
 	int len;
 	dns_header_t *header;
 	static dns_query_t query;
@@ -160,14 +166,17 @@ void DNS_server_t::udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p
 	if (header->flags.qr != 0) goto error;
 	if (ntohs(header->n_record[0]) != 1) goto error;
 
-	len = dnsServer_ptr->parse_next_query(header + 1, p->len - sizeof(dns_header_t), &query);
-	if (len < 0) goto error;
+	len = dnsServer_ptr->parse_next_query(header + 1,
+			p->len - sizeof(dns_header_t), &query);
+	if (len < 0)
+		goto error;
 
-	if(strcmp(query.name, Main_page_name_0) == 0 || strcmp(query.name, Main_page_name_1) == 0)
-	{
-		host_addr.addr = dnsServer_ptr->LWIP_netif_ptr->ip_addr.addr;
+	if(strcmp(query.name, DNS_SERVER_HOST_NAME_0) == 0 ||
+			strcmp(query.name, DNS_SERVER_HOST_NAME_1) == 0) {
+		host_addr.addr = dnsServer_ptr->netifStruct_->ip_addr.addr;
 	}
-	else goto error;
+	else
+		goto error;
 
 	len += sizeof(dns_header_t);
 	out = pbuf_alloc(PBUF_TRANSPORT, len + 16, PBUF_RAM);
@@ -185,10 +194,11 @@ void DNS_server_t::udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p
 	answer->len = htons(4);
 	answer->addr = host_addr.addr;
 	
-	udp_sendto_if(upcb, out, addr, port, dnsServer_ptr->LWIP_netif_ptr);
+	udp_sendto_if(upcb, out, addr, port, dnsServer_ptr->netifStruct_);
 	pbuf_free(out);
 
 error:
 	pbuf_free(p);
 }
 
+}

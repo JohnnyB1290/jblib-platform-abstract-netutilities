@@ -1,7 +1,8 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 by Sergey Fetisov <fsenok@gmail.com>, Stalker1290
+ * Copyright © 2015 by Sergey Fetisov <fsenok@gmail.com>
+ * Copyright © 2019 Evgeniy Ivanov. Contacts: <strelok1290@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,20 +25,18 @@
 
 /*
  * version: 1.0 demo (7.02.2015)
- * brief:   tiny dhcp ipv4 server using lwip (pcb)
+ * brief:   tiny dhcp ipv4 server using lwip (pcb_)
  * ref:     https://lists.gnu.org/archive/html/lwip-users/2012-12/msg00016.html
  */
 
-#ifndef DHSERVER_HPP
-#define DHSERVER_HPP
+#ifndef DHCP_SERVER_HPP
+#define DHCP_SERVER_HPP
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include "stdlib.h"
+#include "jb_common.h"
 #include "lwip/udp.h"
 
+namespace jblib::ethutilities
+{
 
 typedef struct dhcp_entry
 {
@@ -46,6 +45,8 @@ typedef struct dhcp_entry
 	uint8_t  subnet[4];
 	uint32_t lease;
 } dhcp_entry_t;
+
+
 
 typedef struct dhcp_config
 {
@@ -57,31 +58,35 @@ typedef struct dhcp_config
 	dhcp_entry_t*	entries;
 } dhcp_config_t;
 
+
+
 typedef struct
 {
-    uint8_t  dp_op;           /* packet opcode type */
-    uint8_t  dp_htype;        /* hardware addr type */
-    uint8_t  dp_hlen;         /* hardware addr length */
-    uint8_t  dp_hops;         /* gateway hops */
-    uint32_t dp_xid;          /* transaction ID */
-    uint16_t dp_secs;         /* seconds since boot began */
-    uint16_t dp_flags;
-    uint8_t  dp_ciaddr[4];    /* client IP address */
-    uint8_t  dp_yiaddr[4];    /* 'your' IP address */
-    uint8_t  dp_siaddr[4];    /* server IP address */
-    uint8_t  dp_giaddr[4];    /* gateway IP address */
-    uint8_t  dp_chaddr[16];   /* client hardware address */
-    uint8_t  dp_legacy[192];
-    uint8_t  dp_magic[4];
-    uint8_t  dp_options[275]; /* options area */
+	uint8_t  dp_op;           /* packet opcode type */
+	uint8_t  dp_htype;        /* hardware addr type */
+	uint8_t  dp_hlen;         /* hardware addr length */
+	uint8_t  dp_hops;         /* gateway hops */
+	uint32_t dp_xid;          /* transaction ID */
+	uint16_t dp_secs;         /* seconds since boot began */
+	uint16_t dp_flags;
+	uint8_t  dp_ciaddr[4];    /* client IP address */
+	uint8_t  dp_yiaddr[4];    /* 'your' IP address */
+	uint8_t  dp_siaddr[4];    /* server IP address */
+	uint8_t  dp_giaddr[4];    /* gateway IP address */
+	uint8_t  dp_chaddr[16];   /* client hardware address */
+	uint8_t  dp_legacy[192];
+	uint8_t  dp_magic[4];
+	uint8_t  dp_options[275]; /* options area */
 } DHCP_TYPE;
 
 
-class DHCP_Server_t
+
+class DhcpServer
 {
 public:
-	DHCP_Server_t(struct netif* LWIP_netif_ptr,uint8_t start_ip, uint8_t ip_count);
-	~DHCP_Server_t();
+	DhcpServer(struct netif* netifStruct, uint8_t startIp, uint8_t ipCount);
+	~DhcpServer();
+
 private:
 	dhcp_entry_t* entry_by_ip(uint8_t* ip);
 	dhcp_entry_t* entry_by_mac(uint8_t* mac);
@@ -90,13 +95,16 @@ private:
 	void free_entry(dhcp_entry_t* entry);
 	uint8_t* find_dhcp_option(uint8_t* attrs, int size, uint8_t attr);
 	void fill_options(uint8_t msg_type, dhcp_entry_t* entry);
-	static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
+	static void udp_recv_proc(void *arg, struct udp_pcb *upcb,
+			struct pbuf *p, const ip_addr_t *addr, u16_t port);
 
-	DHCP_TYPE dhcp_data;
-	struct udp_pcb* pcb;
-	dhcp_config_t config;
-	static char magic_cookie[4];
-	struct netif* LWIP_netif_ptr;
-
+	static char magicCookie_[4];
+	DHCP_TYPE dhcp_data_;
+	dhcp_config_t config_;
+	struct udp_pcb* pcb_ = NULL;
+	struct netif* netifStruct_ = NULL;
 };
-#endif /* DHSERVER_HPP */
+
+}
+
+#endif /* DHCP_SERVER_HPP */

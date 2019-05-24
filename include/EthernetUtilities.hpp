@@ -1,22 +1,35 @@
-/*
- * Eth_utilities.hpp
+/**
+ * @file
+ * @brief Various Ethernet utilities class Description
  *
- *  Created on: 12 окт. 2017 г.
- *      Author: Stalker1290
+ *
+ * @note
+ * Copyright В© 2019 Evgeniy Ivanov. Contacts: <strelok1290@gmail.com>
+ * All rights reserved.
+ * @note
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ * @note
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @note
+ * This file is a part of JB_Lib.
  */
 
-#ifndef ETH_UTILITIES_HPP_
-#define ETH_UTILITIES_HPP_
+#ifndef ETHERNET_UTILITIES_HPP_
+#define ETHERNET_UTILITIES_HPP_
 
+#include <stdint.h>
 
-#include "stdbool.h"
-#include "stdint.h"
-#include "string.h"
-#include "Defines.h"
-#include "chip.h"
-
-#define _HI(x)	(((x)>>8)&0xff)
-#define _LO(x)	((x)&0xff)
+#define _HI(x)		(((x)>>8)&0xff)
+#define _LO(x)		((x)&0xff)
 
 #define ETX_HW_SIZE 	(6)
 #define ETX_PROTO_SIZE 	(4)
@@ -30,7 +43,6 @@
 #define ETX_ETH_ETHER_TYPE_OFFSET 	(12)
 #define ETX_ETH_CHECKSUM_SIZE		(4)
 
-
 #define ETX_ARP_BODY_LEN (28)
 #define ETX_ARP_HW_TYPE_OFFSET 		(ETX_ETH_HEADER_LEN + 0)
 #define ETX_ARP_PROTO_TYPE_OFFSET 	(ETX_ETH_HEADER_LEN + 2)
@@ -41,7 +53,6 @@
 #define ETX_ARP_SENDER_IP_OFFSET 	(ETX_ETH_HEADER_LEN + 14)
 #define ETX_ARP_TARGET_MAC_OFFSET	(ETX_ETH_HEADER_LEN + 18)
 #define ETX_ARP_TARGET_IP_OFFSET 	(ETX_ETH_HEADER_LEN + 24)
-
 
 #define ETX_IP_HEADER_LEN		(20)
 #define ETX_IP_HEADER_OFFSET	(ETX_ETH_HEADER_LEN)
@@ -81,23 +92,37 @@
 #define ETX_UDPPSH_PROTO_OFFSET          (9)
 #define ETX_UDPPSH_UDP_LEN_OFFSET        (10)
 
-class Eth_utilities_t
+namespace jblib::ethutilities
+{
+
+class EthernetUtilities
 {
 public:
-	static void create_ip_header(uint8_t* outBuff, uint8_t* DIP, uint8_t* SIP, uint32_t DATALEN, uint8_t* SMAC, uint8_t* DMAC, uint8_t protocol);
-	static uint16_t etx_get_ether_type(uint8_t* buf);
-	static bool create_etx_udp_header(uint8_t* outBuff, uint16_t* header_size, uint8_t* DIP, uint16_t DPORT, uint8_t* SIP, uint16_t SPORT, uint32_t DATALEN, uint8_t* SMAC, uint8_t* DMAC);
-	static bool create_etx_udp(uint8_t* outBuff, uint16_t* frame_size, uint8_t* DIP, uint16_t DPORT, uint8_t* SIP, uint16_t SPORT, uint8_t* UDPDATA, uint32_t DATALEN, uint8_t* SMAC, uint8_t* DMAC);
-	static uint16_t etx_network_checksum(uint8_t* buf,uint16_t LEN ,uint16_t START_VAL);
-	static uint8_t* Get_udp_data_ptr(uint8_t* rec_buff, uint16_t* datalen);
-	static void eth_network_checksumadjust(uint8_t *chksum, uint8_t *optr, uint16_t olen, uint8_t *nptr, uint16_t nlen);
-	static void Change_Dest_Src_IP(uint8_t* Frame, uint8_t* New_DIP, uint8_t* New_SIP);
-	static void Mask_ip(uint8_t* IP, uint8_t* mask);
+	static uint16_t getFrameType(uint8_t* frame);
+	static void createIpHeader(uint8_t* frame, uint8_t* dstIp,
+			uint8_t* srcIp, uint32_t dataSize, uint8_t* srcMac,
+			uint8_t* dstMac, uint8_t protocol);
+	static bool createUdpHeader(uint8_t* frame, uint16_t* headerSize,
+			uint8_t* dstIp, uint16_t dstPort, uint8_t* srcIp, uint16_t srcPort,
+			uint32_t dataSize, uint8_t* srcMac, uint8_t* dstMac);
+	static bool createUdpFrame(uint8_t* frame, uint16_t* frameSize,
+			uint8_t* dstIp, uint16_t dstPort, uint8_t* srcIp,
+			uint16_t srcPort, uint8_t* udpData, uint32_t dataSize,
+			uint8_t* srcMac, uint8_t* dstMac);
+	static uint8_t* getUdpData(uint8_t* frame, uint16_t* dataSize);
+	static void changeIp(uint8_t* frame, uint8_t* newDstIp, uint8_t* newSrcIp);
+	static void maskIp(uint8_t* ip, uint8_t* mask);
 	static int compareIp(uint8_t* ip1, uint8_t* ip2, uint8_t* mask);
+	static uint16_t calculateNetworkChecksum(uint8_t* data, uint16_t dataSize,
+			uint16_t startValue);
 
-	static uint16_t ip_id;
+private:
+	static void adjustNetworkChecksum(uint8_t* chksum, uint8_t* optr,
+			uint16_t olen, uint8_t* nptr, uint16_t nlen);
+
+	static uint16_t ipId_;
 };
 
+}
 
-
-#endif /* ETH_UTILITIES_HPP_ */
+#endif /* ETHERNET_UTILITIES_HPP_ */

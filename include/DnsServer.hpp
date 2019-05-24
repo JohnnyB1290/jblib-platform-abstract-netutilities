@@ -1,7 +1,8 @@
 /*
  * The MIT License (MIT)
  *
- * Copyright (c) 2015 by Sergey Fetisov <fsenok@gmail.com>, Stalker1290
+ * Copyright © 2015 by Sergey Fetisov <fsenok@gmail.com>
+ * Copyright © 2019 Evgeniy Ivanov. Contacts: <strelok1290@gmail.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,35 +28,37 @@
  * brief:   tiny dns ipv4 server using lwip (pcb)
  */
 
-#ifndef DNSERVER_HPP
-#define DNSERVER_HPP
+#ifndef DNS_SERVER_HPP
+#define DNS_SERVER_HPP
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include "stdlib.h"
+#include "jb_common.h"
 #include "lwip/udp.h"
-#include "Defines.h"
+
+namespace jblib::ethutilities
+{
 
 typedef struct dns_query
 {
-	char name[DNS_MAX_HOST_NAME_LEN];
+	char name[DNS_SERVER_HOST_NAME_MAX_SIZE];
 	uint16_t type;
 	uint16_t Class;
 } dns_query_t;
 
 
-class DNS_server_t
+class DnsServer
 {
 public:
-	DNS_server_t(struct netif* LWIP_netif_ptr);
-	~DNS_server_t(void);
+	DnsServer(struct netif* netifStruct);
+	~DnsServer(void);
+
 private:
 	int parse_next_query(void *data, int size, dns_query_t *query);
 	static void udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, const ip_addr_t *addr, u16_t port);
-	struct udp_pcb* pcb;
-	struct netif* LWIP_netif_ptr;
+
+	struct udp_pcb* pcb_ = NULL;
+	struct netif* netifStruct_ = NULL;
 };
 
-#endif
+}
+
+#endif /* DNS_SERVER_HPP */
