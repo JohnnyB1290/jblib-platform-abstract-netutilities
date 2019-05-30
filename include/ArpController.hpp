@@ -31,7 +31,9 @@
 #include "IVoidEthernet.hpp"
 #include "callback_interfaces.hpp"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 using namespace jbkernel;
@@ -89,6 +91,7 @@ private:
 	ArpTable_t arpTable_;
 };
 
+}
 }
 
 #endif /* ARP_CONTROLLER_HPP_ */

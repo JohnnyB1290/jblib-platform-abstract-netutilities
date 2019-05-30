@@ -30,7 +30,9 @@
 #include "lwip/netif.h"
 #include "IVoidChannel.hpp"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 using namespace jbkernel;
@@ -69,6 +71,7 @@ private:
 	void* connectionsBuffer_[TCP_SERVER_NUM_BROADCAST_CONNECTIONS];
 };
 
+}
 }
 
 #endif /* TCP_SERVER_CHANNEL_HPP_ */

@@ -28,7 +28,9 @@
 
 #include "jb_common.h"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 class EthernetQueue
@@ -53,6 +55,7 @@ private:
 	bool isInitialized_ = false;
 };
 
+}
 }
 
 #endif /* ETHERNET_QUEUE_HPP_ */

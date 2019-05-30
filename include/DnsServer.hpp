@@ -34,7 +34,9 @@
 #include "jb_common.h"
 #include "lwip/udp.h"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 typedef struct dns_query
@@ -59,6 +61,7 @@ private:
 	struct netif* netifStruct_ = NULL;
 };
 
+}
 }
 
 #endif /* DNS_SERVER_HPP */

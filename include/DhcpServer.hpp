@@ -35,7 +35,9 @@
 #include "jb_common.h"
 #include "lwip/udp.h"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 typedef struct dhcp_entry
@@ -105,6 +107,7 @@ private:
 	struct netif* netifStruct_ = NULL;
 };
 
+}
 }
 
 #endif /* DHCP_SERVER_HPP */

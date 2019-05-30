@@ -33,7 +33,9 @@
 #include "IVoidEthernet.hpp"
 #include "ArpController.hpp"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 using namespace jbkernel;
@@ -73,6 +75,7 @@ private:
 	uint32_t parsePeriodUs_ = ETHERNET_ROUTER_DEFAULT_PARSE_PERIOD_US;
 };
 
+}
 }
 
 #endif /* ETHERNET_ROUTER_HPP_ */

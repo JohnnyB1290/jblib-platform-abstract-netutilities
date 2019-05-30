@@ -92,7 +92,9 @@
 #define ETX_UDPPSH_PROTO_OFFSET          (9)
 #define ETX_UDPPSH_UDP_LEN_OFFSET        (10)
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 class EthernetUtilities
@@ -123,6 +125,7 @@ private:
 	static uint16_t ipId_;
 };
 
+}
 }
 
 #endif /* ETHERNET_UTILITIES_HPP_ */

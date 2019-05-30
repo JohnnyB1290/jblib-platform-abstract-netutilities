@@ -30,7 +30,9 @@
 #include "lwip/netif.h"
 #include "IVoidChannel.hpp"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 using namespace jbkernel;
@@ -66,6 +68,7 @@ private:
 	struct pbuf* pTx_ = NULL;
 };
 
+}
 }
 
 #endif /* UDP_CHANNEL_HPP_ */
