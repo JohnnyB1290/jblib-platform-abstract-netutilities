@@ -33,7 +33,9 @@
 #include <stdio.h>
 #endif
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 using namespace jbkernel;
@@ -344,4 +346,5 @@ void ArpController::voidCallback(void* const source, void* parameter)
 	}
 }
 
+}
 }

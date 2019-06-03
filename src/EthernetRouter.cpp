@@ -41,7 +41,9 @@
 #include <stdio.h>
 #endif
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 using namespace jbkernel;
@@ -123,6 +125,12 @@ struct netif* EthernetRouter::getNetif(IVoidEthernet* interface)
 void EthernetRouter::addInterface(IVoidEthernet* interface, uint8_t* ip,
 		uint8_t* gateway, uint8_t* netmask)
 {
+	if(this->interfacesCounter_ == ETHERNET_ROUTER_MAX_NUM_INTERFACES){
+		#if (USE_CONSOLE && ETHERNET_ROUTER_USE_CONSOLE)
+		printf("Ethernet router: Can't add interface, max number of interfaces\r\n");
+		#endif
+		return;
+	}
 	this->interfaces_[this->interfacesCounter_] = interface;
 	interface->initialize();
 	interface->start();
@@ -136,7 +144,8 @@ void EthernetRouter::addInterface(IVoidEthernet* interface, uint8_t* ip,
 	#if (USE_CONSOLE && ETHERNET_ROUTER_USE_CONSOLE)
 	char* adapterName = NULL;
 	interface->getParameter(PARAMETER_NAME, (void*)&adapterName);
-	printf("Ethernet router: %s \r\n IP = %d.%d.%d.%d\r\n", adapterName,
+	printf("Ethernet router: %s \r\n", adapterName);
+	printf("IP = %d.%d.%d.%d\r\n",
 			ip4_addr1(&ipaddr),ip4_addr2(&ipaddr),
 			ip4_addr3(&ipaddr), ip4_addr4(&ipaddr));
 	printf("Gateway = %d.%d.%d.%d\r\n",
@@ -152,8 +161,6 @@ void EthernetRouter::addInterface(IVoidEthernet* interface, uint8_t* ip,
 //		netif_set_default(&this->netifs_[this->interfacesCounter_]);
 	netif_set_up(&this->netifs_[this->interfacesCounter_]);
 	this->interfacesCounter_++;
-	if(this->interfacesCounter_ == ETHERNET_ROUTER_MAX_NUM_INTERFACES)
-		this->interfacesCounter_ = 0;
 	this->addListener(this->arpControllers_[this->interfacesCounter_ - 1], interface);
 }
 
@@ -181,6 +188,8 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 						netif_set_link_up(&this->netifs_[i]);
 					else
 						netif_set_link_down(&this->netifs_[i]);
+
+					this->arpControllers_[i]->voidCallback(this, NULL);
 				}
 				TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 						1000000, this, (void*)CALLBACK_TYPE_LINK_CHECK);
@@ -309,4 +318,5 @@ void EthernetRouter::deleteListener(IEthernetListener* listener)
 		this->deleteListener(listener,this->interfaces_[i]);
 }
 
+}
 }
