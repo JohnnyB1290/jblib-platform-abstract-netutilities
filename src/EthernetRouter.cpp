@@ -182,7 +182,7 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 			}
 			else if(timeEngineParameters->data == (void*)CALLBACK_TYPE_LINK_CHECK) {
 				for(uint32_t i = 0; i < this->interfacesCounter_; i++) {
-					uint8_t link = 0;
+					bool link = 0;
 					this->interfaces_[i]->getParameter(PARAMETER_LINK, &link);
 					if(link)
 						netif_set_link_up(&this->netifs_[i]);
