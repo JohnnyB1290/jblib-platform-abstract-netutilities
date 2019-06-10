@@ -89,12 +89,13 @@ void EthernetRouter::setParsePeriodUs(uint32_t parsePeriodUs)
 
 
 
-void EthernetRouter::start(uint8_t nrtTimerNumber, bool routeFramesInTimer)
+void EthernetRouter::start(uint8_t nrtTimerNumber, bool routeFramesInTimer, bool checkLink)
 {
 	static bool isStarted = false;
 	if(!isStarted){
 		this->nrtTimerNumber_ = nrtTimerNumber;
 		this->routeFramesInTimer_ = routeFramesInTimer;
+		this->checkLink_ = checkLink;
 		if(this->routeFramesInTimer_){
 			TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 					1000, this, (void*)CALLBACK_TYPE_ROUTE_FRAMES);
@@ -107,6 +108,13 @@ void EthernetRouter::start(uint8_t nrtTimerNumber, bool routeFramesInTimer)
 				1000000, this, (void*)CALLBACK_TYPE_LINK_CHECK);
 		isStarted = true;
 	}
+}
+
+
+
+void EthernetRouter::start(uint8_t nrtTimerNumber, bool routeFramesInTimer)
+{
+	this->start(nrtTimerNumber, routeFramesInTimer, true);
 }
 
 
@@ -182,13 +190,14 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 			}
 			else if(timeEngineParameters->data == (void*)CALLBACK_TYPE_LINK_CHECK) {
 				for(uint32_t i = 0; i < this->interfacesCounter_; i++) {
-					uint32_t link = 0;
-					this->interfaces_[i]->getParameter(PARAMETER_LINK, &link);
-					if(link)
-						netif_set_link_up(&this->netifs_[i]);
-					else
-						netif_set_link_down(&this->netifs_[i]);
-
+					static uint32_t link[ETHERNET_ROUTER_MAX_NUM_INTERFACES] = {0};
+					if(this->checkLink_ || (link[i] == 0)){
+						this->interfaces_[i]->getParameter(PARAMETER_LINK, &link[i]);
+						if(link[i])
+							netif_set_link_up(&this->netifs_[i]);
+						else
+							netif_set_link_down(&this->netifs_[i]);
+					}
 					this->arpControllers_[i]->voidCallback(this, NULL);
 				}
 				TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,

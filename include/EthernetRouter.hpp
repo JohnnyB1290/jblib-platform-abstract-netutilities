@@ -46,6 +46,7 @@ public:
 	static EthernetRouter* getEthernetRouter(void);
 	ArpController* getArpController(IVoidEthernet* interface);
 	void start(uint8_t nrtTimerNumber, bool routeFramesInTimer);
+	void start(uint8_t nrtTimerNumber, bool routeFramesInTimer, bool checkLink);
 	struct netif* getNetif(IVoidEthernet* interface);
 	void addInterface(IVoidEthernet* interface, uint8_t* ip,
 			uint8_t* gateway, uint8_t* netmask);
@@ -72,6 +73,7 @@ private:
 								 [ETHERNET_ROUTER_MAX_NUM_LISTENERS];
 	uint8_t nrtTimerNumber_ = 0;
 	bool routeFramesInTimer_ = false;
+	bool checkLink_ = true;
 	uint32_t parsePeriodUs_ = ETHERNET_ROUTER_DEFAULT_PARSE_PERIOD_US;
 };
 
