@@ -33,6 +33,7 @@
 #include "IVoidEthernet.hpp"
 #include "ArpController.hpp"
 
+
 namespace jblib
 {
 namespace ethutilities
@@ -40,37 +41,53 @@ namespace ethutilities
 
 using namespace jbkernel;
 
+#pragma pack(push, 1)
+typedef struct EthernetRouterIface_t
+{
+	EthernetRouterIface_t* next = NULL;
+	IVoidEthernet* interface = NULL;
+	struct netif* netifPtr = NULL;
+	ArpController* arpController = NULL;
+	IEthernetListener* listeners[ETHERNET_ROUTER_MAX_NUM_LISTENERS];
+	uint8_t ip[4];
+	uint8_t gateway[4];
+	uint8_t netmask[4];
+	uint8_t* mac = NULL;
+	uint32_t link = 0;
+}EthernetRouterIface_t;
+#pragma pack(pop)
+
+
+
 class EthernetRouter : public IVoidCallback
 {
 public:
-	static EthernetRouter* getEthernetRouter(void);
-	ArpController* getArpController(IVoidEthernet* interface);
+	static EthernetRouter* getEthernetRouter(void);;
+	EthernetRouterIface_t* getEthRouterInterface(IVoidEthernet* interface);
+	EthernetRouterIface_t* addInterface(IVoidEthernet* interface, uint8_t* ip,
+				uint8_t* gateway, uint8_t* netmask);
 	void start(uint8_t nrtTimerNumber, bool routeFramesInTimer);
 	void start(uint8_t nrtTimerNumber, bool routeFramesInTimer, bool checkLink);
-	struct netif* getNetif(IVoidEthernet* interface);
-	void addInterface(IVoidEthernet* interface, uint8_t* ip,
-			uint8_t* gateway, uint8_t* netmask);
-	void addListener(IEthernetListener* listener, IVoidEthernet* interface);
 	void addListener(IEthernetListener* listener);
+	void addListener(IEthernetListener* listener, IVoidEthernet* interface);
+	void addListener(IEthernetListener* listener, EthernetRouterIface_t* routerInterface);
+	void deleteListener(IEthernetListener* listener);
 	void deleteListener(IEthernetListener* listener,
 			IVoidEthernet* interface);
-	void deleteListener(IEthernetListener* listener);
+	void deleteListener(IEthernetListener* listener, EthernetRouterIface_t* routerInterface);
 	virtual void voidCallback(void* const source, void* parameter);
 	void setParsePeriodUs(uint32_t parsePeriodUs);
+
 
 private:
 	EthernetRouter(void);
 	void routeFrames(void);
+	void pushFrameToLwip(struct netif* netifPtr);
 
 	static EthernetRouter* ethernetRouter_;
-	IVoidEthernet* interfaces_[ETHERNET_ROUTER_MAX_NUM_INTERFACES];
-	struct netif netifs_[ETHERNET_ROUTER_MAX_NUM_INTERFACES];
-	ArpController* arpControllers_[ETHERNET_ROUTER_MAX_NUM_INTERFACES];
-	uint8_t interfacesCounter_ = 0;
+	EthernetRouterIface_t* firstInterface_ = NULL;
 	EthernetFrame inputFrame_;
 	uint16_t inputFrameSize_ = 0;
-	IEthernetListener* listeners_[ETHERNET_ROUTER_MAX_NUM_INTERFACES]
-								 [ETHERNET_ROUTER_MAX_NUM_LISTENERS];
 	uint8_t nrtTimerNumber_ = 0;
 	bool routeFramesInTimer_ = false;
 	bool checkLink_ = true;
