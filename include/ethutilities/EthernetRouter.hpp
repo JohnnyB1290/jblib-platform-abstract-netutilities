@@ -62,7 +62,7 @@ typedef struct EthernetRouterIface_t
 class EthernetRouter : public IVoidCallback
 {
 public:
-	static EthernetRouter* getEthernetRouter(void);;
+	static EthernetRouter* getEthernetRouter(void);
 	EthernetRouterIface_t* getEthRouterInterface(IVoidEthernet* interface);
 	EthernetRouterIface_t* addInterface(IVoidEthernet* interface, uint8_t* ip,
 				uint8_t* gateway, uint8_t* netmask);

@@ -27,6 +27,7 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+#include "jbkernel/jb_common.h"
 #if USE_LWIP
 #include <string.h>
 #include "arch/systick_arch.h"
@@ -36,7 +37,7 @@
 #include "lwip/timeouts.h"
 #include "netif/etharp.h"
 #include "arch/ethernetif.h"
-#include "ethutilities/JbController.hpp"
+#include "jbdrivers/JbController.hpp"
 #include "ethutilities/EthernetRouter.hpp"
 #include "jbkernel/TimeEngine.hpp"
 #if (USE_CONSOLE && ETHERNET_ROUTER_USE_CONSOLE)
