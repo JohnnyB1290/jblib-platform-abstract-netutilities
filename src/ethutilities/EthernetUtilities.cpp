@@ -29,7 +29,7 @@
 
 #include <string.h>
 #include "jbkernel/jb_common.h"
-#include "EthernetUtilities.hpp"
+#include "ethutilities/EthernetUtilities.hpp"
 
 namespace jblib::ethutilities
 {

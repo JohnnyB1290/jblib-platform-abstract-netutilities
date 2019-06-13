@@ -28,7 +28,7 @@
 
 #include "lwip/ip_addr.h"
 #include "lwip/netif.h"
-#include "IVoidChannel.hpp"
+#include "jbkernel/IVoidChannel.hpp"
 
 namespace jblib
 {

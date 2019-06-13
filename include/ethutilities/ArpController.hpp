@@ -26,10 +26,10 @@
 #ifndef ARP_CONTROLLER_HPP_
 #define ARP_CONTROLLER_HPP_
 
-#include "jb_common.h"
-#include "EthernetUtilities.hpp"
-#include "IVoidEthernet.hpp"
-#include "callback_interfaces.hpp"
+#include "jbkernel/jb_common.h"
+#include "ethutilities/EthernetUtilities.hpp"
+#include "jbkernel/IVoidEthernet.hpp"
+#include "jbkernel/callback_interfaces.hpp"
 
 namespace jblib
 {

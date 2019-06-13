@@ -28,8 +28,8 @@
 
 #if USE_LWIP
 #include <string.h>
-#include "jb_common.h"
-#include "DhcpServer.hpp"
+#include "jbkernel/jb_common.h"
+#include "ethutilities/DhcpServer.hpp"
 
 /* DHCP message type */
 #define DHCP_DISCOVER       1

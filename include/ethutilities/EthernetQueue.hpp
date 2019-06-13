@@ -26,7 +26,7 @@
 #ifndef ETHERNET_QUEUE_HPP_
 #define ETHERNET_QUEUE_HPP_
 
-#include "jb_common.h"
+#include "jbkernel/jb_common.h"
 
 namespace jblib
 {

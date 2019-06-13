@@ -30,9 +30,9 @@
 #if USE_LWIP
 #include <stdlib.h>
 #include <string.h>
-#include "jb_common.h"
+#include "jbkernel/jb_common.h"
 #include "lwip/tcp.h"
-#include "TcpServerChannel.hpp"
+#include "ethutilities/TcpServerChannel.hpp"
 #if (USE_CONSOLE && TCP_SERVER_USE_CONSOLE)
 #include <stdio.h>
 #endif

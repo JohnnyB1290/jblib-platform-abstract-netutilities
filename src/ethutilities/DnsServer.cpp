@@ -34,7 +34,7 @@
 
 #if USE_LWIP
 #include <string.h>
-#include "DnsServer.hpp"
+#include "ethutilities/DnsServer.hpp"
 
 namespace jblib::ethutilities
 {

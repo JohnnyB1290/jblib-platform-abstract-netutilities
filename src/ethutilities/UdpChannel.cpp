@@ -31,8 +31,8 @@
 #include <string.h>
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
-#include "UdpChannel.hpp"
-#include "jb_common.h"
+#include "ethutilities/UdpChannel.hpp"
+#include "jbkernel/jb_common.h"
 
 namespace jblib::ethutilities
 {

@@ -27,11 +27,11 @@
 #ifndef ETHERNET_ROUTER_HPP_
 #define ETHERNET_ROUTER_HPP_
 
-#include "jb_common.h"
+#include "jbkernel/jb_common.h"
 #include "lwip/netif.h"
-#include "callback_interfaces.hpp"
-#include "IVoidEthernet.hpp"
-#include "ArpController.hpp"
+#include "jbkernel/callback_interfaces.hpp"
+#include "jbkernel/IVoidEthernet.hpp"
+#include "ethutilities/ArpController.hpp"
 
 
 namespace jblib

@@ -32,7 +32,7 @@
 #ifndef DHCP_SERVER_HPP
 #define DHCP_SERVER_HPP
 
-#include "jb_common.h"
+#include "jbkernel/jb_common.h"
 #include "lwip/udp.h"
 
 namespace jblib
