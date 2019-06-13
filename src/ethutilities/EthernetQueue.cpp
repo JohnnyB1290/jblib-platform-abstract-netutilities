@@ -28,7 +28,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include "string.h"
-#include "EthernetQueue.hpp"
+#include "ethutilities/EthernetQueue.hpp"
 
 namespace jblib::ethutilities
 {

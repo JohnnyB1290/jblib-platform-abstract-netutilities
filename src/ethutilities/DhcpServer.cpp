@@ -26,6 +26,7 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+#if USE_LWIP
 #include <string.h>
 #include "jb_common.h"
 #include "DhcpServer.hpp"
@@ -375,3 +376,5 @@ void DhcpServer::udp_recv_proc(void *arg, struct udp_pcb *upcb, struct pbuf *p, 
 }
 
 }
+
+#endif

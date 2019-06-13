@@ -28,7 +28,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include <string.h>
-#include "ArpController.hpp"
+#include "ethutilities/ArpController.hpp"
 #if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
 #include <stdio.h>
 #endif

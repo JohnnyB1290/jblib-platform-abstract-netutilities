@@ -27,6 +27,7 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+#if USE_LWIP
 #include <stdlib.h>
 #include <string.h>
 #include "jb_common.h"
@@ -491,3 +492,5 @@ void TcpServerChannel::deleteConnectionFromBuffer(void* ss)
 }
 
 }
+
+#endif

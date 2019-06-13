@@ -27,6 +27,7 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+#if USE_LWIP
 #include <string.h>
 #include "lwip/udp.h"
 #include "lwip/igmp.h"
@@ -166,3 +167,5 @@ void UdpChannel::setParameter(const uint8_t number, void* const value)
 }
 
 }
+
+#endif

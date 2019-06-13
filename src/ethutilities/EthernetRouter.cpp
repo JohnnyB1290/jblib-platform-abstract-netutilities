@@ -27,6 +27,7 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+#if USE_LWIP
 #include <string.h>
 #include "arch/systick_arch.h"
 #include "lwip/init.h"
@@ -392,3 +393,5 @@ void EthernetRouter::deleteListener(IEthernetListener* listener)
 
 }
 }
+
+#endif
