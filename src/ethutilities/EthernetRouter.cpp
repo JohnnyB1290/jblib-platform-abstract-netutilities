@@ -219,9 +219,8 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 							netif_set_link_up(ptr->netifPtr);
 						else
 							netif_set_link_down(ptr->netifPtr);
-
-						ptr->arpController->voidCallback(this, NULL);
 					}
+					ptr->arpController->voidCallback(this, NULL);
 					ptr = ptr->next;
 				}
 				TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
