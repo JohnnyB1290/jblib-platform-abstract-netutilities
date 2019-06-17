@@ -146,6 +146,10 @@ void ArpController::parseFrame(EthernetFrame* const frame,
 		if((inputFrame[ETX_ARP_OPCODE_OFFSET] == 0x00) &&
 				(inputFrame[ETX_ARP_OPCODE_OFFSET+1] == 0x02)) { //reply
 
+			#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+			char* adapterName;
+			this->ethernetAdapter_->getParameter(PARAMETER_NAME, (void*)&adapterName);
+			#endif
 			int16_t index = this->getArpTableIndex(&(inputFrame[ETX_ARP_SENDER_IP_OFFSET]));
 			if(index >= 0) {
 				memcpy(this->arpTable_.line[index].mac,
@@ -163,20 +167,30 @@ void ArpController::parseFrame(EthernetFrame* const frame,
 				if(this->arpTable_.recordCounter == ARP_CONTROLLER_ARP_TABLE_SIZE)
 					this->arpTable_.recordCounter = 0;
 				#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
-				char* adapterName;
-				this->ethernetAdapter_->getParameter(PARAMETER_NAME, (void*)&adapterName);
-				printf("%s Arp reply recieved. Create record for ip %i.%i.%i.%i\r\n\r\n",
-						adapterName,
-						this->arpTable_.line[index].ip[0],
-						this->arpTable_.line[index].ip[1],
-						this->arpTable_.line[index].ip[2],
-						this->arpTable_.line[index].ip[3]);
+				printf("Create Arp record\r\n");
 				#endif
 			}
+			#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+			printf("%s Arp reply FROM %i.%i.%i.%i ",
+					adapterName,
+					this->arpTable_.line[index].ip[0],
+					this->arpTable_.line[index].ip[1],
+					this->arpTable_.line[index].ip[2],
+					this->arpTable_.line[index].ip[3]);
+			printf("FOR %i.%i.%i.%i\r\n",
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 0],
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 1],
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 2],
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 3]);
+			#endif
 		}
 		else if((inputFrame[ETX_ARP_OPCODE_OFFSET] == 0x00) &&
 				(inputFrame[ETX_ARP_OPCODE_OFFSET+1] == 0x01)) { //request
 
+			#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+			char* adapterName;
+			this->ethernetAdapter_->getParameter(PARAMETER_NAME, (void*)&adapterName);
+			#endif
 			int16_t index = this->getArpTableIndex(&inputFrame[ETX_ARP_SENDER_IP_OFFSET]);
 			if(index >= 0){
 				memcpy(this->arpTable_.line[index].mac,
@@ -194,27 +208,31 @@ void ArpController::parseFrame(EthernetFrame* const frame,
 				if(this->arpTable_.recordCounter == ARP_CONTROLLER_ARP_TABLE_SIZE)
 					this->arpTable_.recordCounter = 0;
 				#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
-				char* adapterName;
-				this->ethernetAdapter_->getParameter(PARAMETER_NAME, (void*)&adapterName);
-				printf("%s Arp reqest recieved for ip %i.%i.%i.%i\r\n",
-						adapterName,
-						inputFrame[ETX_ARP_TARGET_IP_OFFSET + 0],
-						inputFrame[ETX_ARP_TARGET_IP_OFFSET + 1],
-						inputFrame[ETX_ARP_TARGET_IP_OFFSET + 2],
-						inputFrame[ETX_ARP_TARGET_IP_OFFSET + 3]);
-				printf("Create record for ip %i.%i.%i.%i\r\n\r\n",
-						this->arpTable_.line[index].ip[0],
-						this->arpTable_.line[index].ip[1],
-						this->arpTable_.line[index].ip[2],
-						this->arpTable_.line[index].ip[3]);
+				printf("Create Arp record\r\n");
 				#endif
 			}
+			#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+			printf("%s Arp request FROM %i.%i.%i.%i ",
+					adapterName,
+					this->arpTable_.line[index].ip[0],
+					this->arpTable_.line[index].ip[1],
+					this->arpTable_.line[index].ip[2],
+					this->arpTable_.line[index].ip[3]);
+			printf("FOR %i.%i.%i.%i\r\n",
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 0],
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 1],
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 2],
+					inputFrame[ETX_ARP_TARGET_IP_OFFSET + 3]);
+			#endif
 			outputFrame = (uint8_t*)malloc_s(sizeof(EthernetFrame));
 			if(outputFrame){
 				this->createReply(inputFrame, outputFrame, this->mac_, &outputFrameSize);
 				this->ethernetAdapter_->addToTxQueue((EthernetFrame*)outputFrame,
 						outputFrameSize);
 				free_s(outputFrame);
+				#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+				printf("Send reply.\r\n");
+				#endif
 			}
 		}
 	}
@@ -235,17 +253,40 @@ void ArpController::sendArpRequest(uint8_t* dstIp, uint8_t* srcIp)
 	if(outputFrame == NULL)
 		return;
 	uint16_t outputFrameSize = 0;
+
+	#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+	char* adapterName;
+	this->ethernetAdapter_->getParameter(PARAMETER_NAME, (void*)&adapterName);
+	#endif
 	if(srcIp == NULL){
 		for(uint32_t i = 0; i < this->ipTableForReply_.ipCount; i++) {
-			this->createRequest(dstIp, this->mac_,
-					this->ipTableForReply_.ip[i], outputFrame, &outputFrameSize);
-			this->ethernetAdapter_->addToTxQueue((EthernetFrame*)outputFrame,
-					outputFrameSize);
+			if(EthernetUtilities::compareIp(dstIp, this->ipTableForReply_.ip[i],
+					this->ipTableForReply_.mask[i]) == 0){
+				this->createRequest(dstIp, this->mac_,
+						this->ipTableForReply_.ip[i], outputFrame, &outputFrameSize);
+				this->ethernetAdapter_->addToTxQueue((EthernetFrame*)outputFrame,
+						outputFrameSize);
+				#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+				printf("%s Send ARP request FOR %i.%i.%i.%i ",
+						adapterName, dstIp[0], dstIp[1], dstIp[2],dstIp[3]);
+				printf("FROM %i.%i.%i.%i\r\n",
+						this->ipTableForReply_.ip[i][0],
+						this->ipTableForReply_.ip[i][1],
+						this->ipTableForReply_.ip[i][2],
+						this->ipTableForReply_.ip[i][3]);
+				#endif
+			}
 		}
 	}
 	else {
 		this->createRequest(dstIp, this->mac_, srcIp, outputFrame, &outputFrameSize);
 		this->ethernetAdapter_->addToTxQueue((EthernetFrame*)outputFrame, outputFrameSize);
+		#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+		printf("%s Send ARP request FOR %i.%i.%i.%i ",
+				adapterName, dstIp[0], dstIp[1], dstIp[2],dstIp[3]);
+		printf("FROM %i.%i.%i.%i\r\n",
+				srcIp[0],srcIp[1], srcIp[2], srcIp[3]);
+		#endif
 	}
 	free_s(outputFrame);
 }
@@ -254,7 +295,16 @@ void ArpController::sendArpRequest(uint8_t* dstIp, uint8_t* srcIp)
 
 void ArpController::addIpForArpReply(uint8_t* ip)
 {
+	uint8_t mask[ETX_PROTO_SIZE] = {255, 255, 255, 0};
+	this->addIpForArpReply(ip, mask);
+}
+
+
+
+void ArpController::addIpForArpReply(uint8_t* ip, uint8_t* mask)
+{
 	memcpy(this->ipTableForReply_.ip[this->ipTableForReply_.ipCount], ip, ETX_PROTO_SIZE);
+	memcpy(this->ipTableForReply_.mask[this->ipTableForReply_.ipCount], mask, ETX_PROTO_SIZE);
 	this->ipTableForReply_.ipCount++;
 	if(this->ipTableForReply_.ipCount == ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY)
 		this->ipTableForReply_.ipCount = 0;

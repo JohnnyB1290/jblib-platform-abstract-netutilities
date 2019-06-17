@@ -101,7 +101,7 @@ EthernetRouterIface_t* EthernetRouter::addInterface(IVoidEthernet* interface, ui
 		newIface->interface->initialize();
 		newIface->interface->start();
 		newIface->arpController = new ArpController(newIface->interface);
-		newIface->arpController->addIpForArpReply(ip);
+		newIface->arpController->addIpForArpReply(ip, netmask);
 
 		memcpy(newIface->ip, ip, 4);
 		memcpy(newIface->gateway, gateway, 4);

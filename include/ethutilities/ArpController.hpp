@@ -41,6 +41,7 @@ using namespace jbkernel;
 #pragma pack(push, 1)
 typedef struct {
 	uint8_t ip[ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY][ETX_PROTO_SIZE];
+	uint8_t mask[ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY][ETX_PROTO_SIZE];
 	uint16_t ipCount = 0;
 }IpTableForReply_t;
 
@@ -72,6 +73,7 @@ public:
 	void sendArpRequest(uint8_t* dstIp);
 	void sendArpRequest(uint8_t* dstIp, uint8_t* srcIp);
 	void addIpForArpReply(uint8_t* ip);
+	void addIpForArpReply(uint8_t* ip, uint8_t* mask);
 	bool isIpInTableForReply(uint8_t* ip);
 	bool getMac(uint8_t* ip, uint8_t* mac);
 	bool getIp(uint8_t* mac, uint8_t* ip);
