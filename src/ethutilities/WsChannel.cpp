@@ -146,14 +146,20 @@ void WsChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 			if(this->pcbs_[i]){
 				if(this->pcbs_[i]->state != ESTABLISHED)
 					this->pcbs_[i] = NULL;
-				else if(buffer != NULL)
+				else if(buffer != NULL) {
+					__disable_irq();
 					websocket_write(this->pcbs_[i], buffer, size, WS_BIN_MODE);
+					__enable_irq();
+				}
+
 			}
 		}
 	}
 	else if(buffer != NULL){
+		__disable_irq();
 		WsConnectInfo_t* wsConnectInfo = (WsConnectInfo_t*)parameter;
 		websocket_write(wsConnectInfo->pcb, buffer, size, wsConnectInfo->mode);
+		__enable_irq();
 	}
 }
 
