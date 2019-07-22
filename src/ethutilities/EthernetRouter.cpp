@@ -129,7 +129,7 @@ EthernetRouterIface_t* EthernetRouter::addInterface(IVoidEthernet* interface, ui
 		#endif
 
 		netif_add(newIface->netifPtr, &ipaddr, &mask, &gw,
-					(void*)newIface->interface, lwip_ethernetif_init, ethernet_input);
+					(void*)newIface->interface, lwipEthernetifInit, netif_input);
 		netif_set_up(newIface->netifPtr);
 
 		for(uint32_t i = 0; i < ETHERNET_ROUTER_MAX_NUM_LISTENERS; i++)
@@ -205,7 +205,7 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 				this->routeFrames();
 			}
 			else if(timeEngineParameters->data == (void*)CALLBACK_TYPE_LWIP_MS) {
-				LWIPTimer_Handler();
+				lwipTimerHandler();
 				TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 						1000, this, (void*)CALLBACK_TYPE_LWIP_MS);
 			}
@@ -287,7 +287,7 @@ void EthernetRouter::routeFrames(void)
 void EthernetRouter::pushFrameToLwip(struct netif* netifPtr)
 {
 	__disable_irq();
-	lwip_ethernetif_input(netifPtr, &this->inputFrame_, this->inputFrameSize_);
+	lwipEthernetifInput(netifPtr, &this->inputFrame_, this->inputFrameSize_);
 	__enable_irq();
 }
 
