@@ -289,6 +289,11 @@ void EthernetRouter::pushFrameToLwip(struct netif* netifPtr)
 	__disable_irq();
 	lwipEthernetifInput(netifPtr, &this->inputFrame_, this->inputFrameSize_);
 	__enable_irq();
+=======
+	disableInterrupts();
+	lwip_ethernetif_input(netifPtr, &this->inputFrame_, this->inputFrameSize_);
+	enableInterrupts();
+>>>>>>> Stashed changes
 }
 
 
