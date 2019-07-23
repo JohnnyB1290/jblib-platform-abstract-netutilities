@@ -273,9 +273,9 @@ void EthernetRouter::routeFrames(void)
 		}
 		ptr = ptr->next;
 	}
-	__disable_irq();
+	disableInterrupts();
 	sys_check_timeouts();
-	__enable_irq();
+	enableInterrupts();
 	if(this->routeFramesInTimer_){
 		TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 				this->parsePeriodUs_, this, (void*)CALLBACK_TYPE_ROUTE_FRAMES);
@@ -286,14 +286,9 @@ void EthernetRouter::routeFrames(void)
 
 void EthernetRouter::pushFrameToLwip(struct netif* netifPtr)
 {
-	__disable_irq();
-	lwipEthernetifInput(netifPtr, &this->inputFrame_, this->inputFrameSize_);
-	__enable_irq();
-=======
 	disableInterrupts();
-	lwip_ethernetif_input(netifPtr, &this->inputFrame_, this->inputFrameSize_);
+	lwipEthernetifInput(netifPtr, &this->inputFrame_, this->inputFrameSize_);
 	enableInterrupts();
->>>>>>> Stashed changes
 }
 
 
