@@ -28,6 +28,7 @@
 
 #include "lwip/ip_addr.h"
 #include "lwip/netif.h"
+#include "lwip/udp.h"
 #include "jbkernel/IVoidChannel.hpp"
 
 namespace jblib
@@ -36,6 +37,11 @@ namespace ethutilities
 {
 
 using namespace jbkernel;
+
+typedef struct {
+	uint32_t host;
+	uint16_t port;
+} UdpHost_t;
 
 class UdpChannel : public IVoidChannel
 {
@@ -52,6 +58,7 @@ public:
 	virtual void tx(uint8_t* const buffer, const uint16_t size, void* parameter);
 	virtual void getParameter(const uint8_t number, void* const value);
 	virtual void setParameter(const uint8_t number, void* const value);
+	void setDestination(UdpHost_t* to);
 
 private:
 	static void recieveCallback(void* arg, struct udp_pcb* pcb, struct pbuf* p, const ip_addr_t* addr, u16_t port);
@@ -66,6 +73,7 @@ private:
 	struct netif* netif_ = NULL;
 	IChannelCallback* callback_ = NULL;
 	struct pbuf* pTx_ = NULL;
+	UdpHost_t dmSource_;
 };
 
 }

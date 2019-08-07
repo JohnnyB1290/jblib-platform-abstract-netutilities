@@ -128,10 +128,12 @@ void UdpChannel::recieveCallback(void* arg, struct udp_pcb* pcb,
 {
 	struct pbuf* pNext = p;
 	UdpChannel* udpChannel = (UdpChannel*)arg;
+	udpChannel->dmSource_.host = addr->addr;
+	udpChannel->dmSource_.port = port;
 	if(udpChannel->callback_) {
 		while(pNext){
 			udpChannel->callback_->channelCallback((uint8_t*)pNext->payload,
-					pNext->len, udpChannel, NULL);
+					pNext->len, udpChannel, &(udpChannel->dmSource_));
 			pNext = pNext->next;
 		}
 	}
@@ -165,6 +167,11 @@ void UdpChannel::getParameter(const uint8_t number, void* const value)
 void UdpChannel::setParameter(const uint8_t number, void* const value)
 {
 
+}
+
+void UdpChannel::setDestination(UdpHost_t* to) {
+	this->dstIpaddr_.addr = to->host;
+	this->dstPort_ = to->port;
 }
 
 }
