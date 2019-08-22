@@ -84,6 +84,13 @@ EthernetRouter::EthernetRouter(void) : IVoidCallback()
 
 
 
+std::forward_list<EthernetRouterIface_t*>* EthernetRouter::getInterfacesList(void)
+{
+	return &this->interfacesList_;
+}
+
+
+
 void EthernetRouter::setParsePeriodUs(uint32_t parsePeriodUs)
 {
 	this->parsePeriodUs_ = parsePeriodUs;
@@ -132,18 +139,7 @@ EthernetRouterIface_t* EthernetRouter::addInterface(IVoidEthernet* interface, ui
 					(void*)newIface->interface, lwipEthernetifInit, netif_input);
 		netif_set_up(newIface->netifPtr);
 
-		for(uint32_t i = 0; i < ETHERNET_ROUTER_MAX_NUM_LISTENERS; i++)
-			newIface->listeners[i] = NULL;
-
-		if(this->firstInterface_ == NULL){
-			this->firstInterface_ = newIface;
-		}
-		else{
-			EthernetRouterIface_t* ptr = this->firstInterface_;
-			while(ptr->next != NULL)
-				ptr = ptr->next;
-			ptr->next = newIface;
-		}
+		this->interfacesList_.push_front(newIface);
 	}
 	return newIface;
 }
@@ -182,13 +178,11 @@ void EthernetRouter::start(uint8_t nrtTimerNumber, bool routeFramesInTimer)
 
 EthernetRouterIface_t* EthernetRouter::getEthRouterInterface(IVoidEthernet* interface)
 {
-	if(interface == NULL)
-		return this->firstInterface_;
-	EthernetRouterIface_t* ptr = this->firstInterface_;
-	while(ptr != NULL) {
-		if(ptr->interface == interface)
-			return ptr;
-		ptr = ptr->next;
+	for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+			it != this->interfacesList_.end(); it++){
+		EthernetRouterIface_t* routerIface = *it;
+		if(routerIface->interface == interface)
+			return routerIface;
 	}
 	return NULL;
 }
@@ -210,18 +204,17 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 						1000, this, (void*)CALLBACK_TYPE_LWIP_MS);
 			}
 			else if(timeEngineParameters->data == (void*)CALLBACK_TYPE_LINK_CHECK) {
-
-				EthernetRouterIface_t* ptr = this->firstInterface_;
-				while(ptr != NULL){
-					if(this->checkLink_ || (ptr->link == 0)) {
-						ptr->interface->getParameter(PARAMETER_LINK, &ptr->link);
-						if(ptr->link)
-							netif_set_link_up(ptr->netifPtr);
+				for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+						it != this->interfacesList_.end(); it++){
+					EthernetRouterIface_t* routerIface = *it;
+					if(this->checkLink_ || (routerIface->link == 0)) {
+						routerIface->interface->getParameter(PARAMETER_LINK, &(routerIface->link));
+						if(routerIface->link)
+							netif_set_link_up(routerIface->netifPtr);
 						else
-							netif_set_link_down(ptr->netifPtr);
+							netif_set_link_down(routerIface->netifPtr);
 					}
-					ptr->arpController->voidCallback(this, NULL);
-					ptr = ptr->next;
+					routerIface->arpController->voidCallback(this, NULL);
 				}
 				TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 						1000000, this, (void*)CALLBACK_TYPE_LINK_CHECK);
@@ -236,42 +229,40 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 
 void EthernetRouter::routeFrames(void)
 {
-	if(this->firstInterface_ == NULL){
+	if(this->interfacesList_.empty()){
 		if(this->routeFramesInTimer_){
 			TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 					100000, this, (void*)CALLBACK_TYPE_ROUTE_FRAMES);
 		}
 		return;
 	}
-	EthernetRouterIface_t* ptr = this->firstInterface_;
-	while(ptr != NULL){
-		this->inputFrameSize_ = ptr->interface->pullOutRxFrame(&this->inputFrame_);
+	for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+			it != this->interfacesList_.end(); it++){
+		EthernetRouterIface_t* routerIface = *it;
+		this->inputFrameSize_ = routerIface->interface->pullOutRxFrame(&this->inputFrame_);
 		if(this->inputFrameSize_) {
 			uint8_t* frameU8 = (uint8_t*)&this->inputFrame_;
 			if(EthernetUtilities::getFrameType(frameU8) == ETX_ETHER_TYPE_ARP){
-				ptr->arpController->parseFrame(&this->inputFrame_, this->inputFrameSize_,
-						ptr->interface, NULL);
-				if(memcmp(&frameU8[ETX_ARP_TARGET_IP_OFFSET], ptr->ip, ETX_PROTO_SIZE) == 0){
-					this->pushFrameToLwip(ptr->netifPtr);
+				routerIface->arpController->parseFrame(&this->inputFrame_, this->inputFrameSize_,
+						routerIface->interface, NULL);
+				if(memcmp(&frameU8[ETX_ARP_TARGET_IP_OFFSET], routerIface->ip, ETX_PROTO_SIZE) == 0){
+					this->pushFrameToLwip(routerIface->netifPtr);
 				}
 			}
 			else{
-				if(memcmp(&frameU8[ETX_ETH_D_MAC_OFFSET], ptr->mac, ETX_HW_SIZE) == 0){
-					if(memcmp(&frameU8[ETX_IP_DIP_OFFSET], ptr->ip, ETX_PROTO_SIZE) == 0){
-						this->pushFrameToLwip(ptr->netifPtr);
+				if(memcmp(&frameU8[ETX_ETH_D_MAC_OFFSET], routerIface->mac, ETX_HW_SIZE) == 0){
+					if(memcmp(&frameU8[ETX_IP_DIP_OFFSET], routerIface->ip, ETX_PROTO_SIZE) == 0){
+						this->pushFrameToLwip(routerIface->netifPtr);
 					}
-					for(uint32_t i = 0; i < ETHERNET_ROUTER_MAX_NUM_LISTENERS; i++ ){
-						if(ptr->listeners[i] == NULL)
-							break;
-						else{
-							ptr->listeners[i]->parseFrame(&this->inputFrame_, this->inputFrameSize_,
-									ptr->interface, ptr);
-						}
+					for(std::forward_list<IEthernetListener*>::iterator listenersIt =
+							routerIface->listenersList.begin();
+							listenersIt != routerIface->listenersList.end(); listenersIt++){
+						(*listenersIt)->parseFrame(&this->inputFrame_, this->inputFrameSize_,
+								routerIface->interface, routerIface);
 					}
 				}
 			}
 		}
-		ptr = ptr->next;
 	}
 	disableInterrupts();
 	sys_check_timeouts();
@@ -296,31 +287,18 @@ void EthernetRouter::pushFrameToLwip(struct netif* netifPtr)
 void EthernetRouter::addListener(IEthernetListener* listener,
 		EthernetRouterIface_t* routerInterface)
 {
-	if(routerInterface){
-		for(uint32_t i = 0; i < ETHERNET_ROUTER_MAX_NUM_LISTENERS; i++) {
-			if(routerInterface->listeners[i] == listener)
-				break;
-			else if(routerInterface->listeners[i] == NULL){
-				routerInterface->listeners[i] = listener;
-				break;
-			}
-		}
-	}
+	if(routerInterface)
+		routerInterface->listenersList.push_front(listener);
 }
 
 
 
 void EthernetRouter::addListener(IEthernetListener* listener, IVoidEthernet* interface)
 {
-	if(this->firstInterface_ == NULL)
-		return;
-	EthernetRouterIface_t* ptr = this->firstInterface_;
-	while(ptr != NULL) {
-		if(ptr->interface == interface){
-			this->addListener(listener, ptr);
-			break;
-		}
-		ptr = ptr->next;
+	for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+			it != this->interfacesList_.end(); it++){
+		if((*it)->interface == interface)
+			this->addListener(listener, (*it));
 	}
 }
 
@@ -328,12 +306,9 @@ void EthernetRouter::addListener(IEthernetListener* listener, IVoidEthernet* int
 
 void EthernetRouter::addListener(IEthernetListener* listener)
 {
-	if(this->firstInterface_ == NULL)
-		return;
-	EthernetRouterIface_t* ptr = this->firstInterface_;
-	while(ptr != NULL){
-		this->addListener(listener, ptr);
-		ptr = ptr->next;
+	for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+			it != this->interfacesList_.end(); it++){
+		this->addListener(listener, (*it));
 	}
 }
 
@@ -342,23 +317,12 @@ void EthernetRouter::addListener(IEthernetListener* listener)
 void EthernetRouter::deleteListener(IEthernetListener* listener,
 		EthernetRouterIface_t* routerInterface)
 {
-	uint32_t index = 0;
-	for(uint32_t i = 0; i < ETHERNET_ROUTER_MAX_NUM_LISTENERS; i++){
-		if(routerInterface->listeners[i] == listener)
-			break;
-		else index++;
-	}
-	if(index == (ETHERNET_ROUTER_MAX_NUM_LISTENERS - 1)) {
-		if(routerInterface->listeners[index] == listener)
-			routerInterface->listeners[index] = NULL;
-	}
-	else{
-		for(uint8_t i = index; i < (ETHERNET_ROUTER_MAX_NUM_LISTENERS - 1); i++) {
-			routerInterface->listeners[i] = routerInterface->listeners[i + 1];
-			if(routerInterface->listeners[i + 1] == NULL)
-				break;
-		}
-	}
+	routerInterface->listenersList.remove_if([listener](IEthernetListener* current){
+		if(current == listener)
+			return true;
+		else
+			return false;
+	});
 }
 
 
@@ -366,15 +330,10 @@ void EthernetRouter::deleteListener(IEthernetListener* listener,
 void EthernetRouter::deleteListener(IEthernetListener* listener,
 		IVoidEthernet* interface)
 {
-	if(this->firstInterface_ == NULL)
-		return;
-	EthernetRouterIface_t* ptr = this->firstInterface_;
-	while(ptr != NULL){
-		if(ptr->interface == interface){
-			this->deleteListener(listener, ptr);
-			break;
-		}
-		ptr = ptr->next;
+	for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+			it != this->interfacesList_.end(); it++){
+		if((*it)->interface == interface)
+			this->deleteListener(listener, (*it));
 	}
 }
 
@@ -382,12 +341,9 @@ void EthernetRouter::deleteListener(IEthernetListener* listener,
 
 void EthernetRouter::deleteListener(IEthernetListener* listener)
 {
-	if(this->firstInterface_ == NULL)
-		return;
-	EthernetRouterIface_t* ptr = this->firstInterface_;
-	while(ptr != NULL) {
-		this->deleteListener(listener, ptr);
-		ptr = ptr->next;
+	for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+			it != this->interfacesList_.end(); it++){
+		this->deleteListener(listener, (*it));
 	}
 }
 

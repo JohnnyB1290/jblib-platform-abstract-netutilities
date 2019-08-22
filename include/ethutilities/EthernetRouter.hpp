@@ -27,6 +27,7 @@
 #ifndef ETHERNET_ROUTER_HPP_
 #define ETHERNET_ROUTER_HPP_
 
+#include <forward_list>
 #include "jbkernel/jb_common.h"
 #include "lwip/netif.h"
 #include "jbkernel/callback_interfaces.hpp"
@@ -44,11 +45,10 @@ using namespace jbkernel;
 #pragma pack(push, 1)
 typedef struct EthernetRouterIface_t
 {
-	EthernetRouterIface_t* next = NULL;
 	IVoidEthernet* interface = NULL;
 	struct netif* netifPtr = NULL;
 	ArpController* arpController = NULL;
-	IEthernetListener* listeners[ETHERNET_ROUTER_MAX_NUM_LISTENERS];
+	std::forward_list<IEthernetListener*> listenersList;
 	uint8_t ip[4];
 	uint8_t gateway[4];
 	uint8_t netmask[4];
@@ -77,7 +77,7 @@ public:
 	void deleteListener(IEthernetListener* listener, EthernetRouterIface_t* routerInterface);
 	virtual void voidCallback(void* const source, void* parameter);
 	void setParsePeriodUs(uint32_t parsePeriodUs);
-
+	std::forward_list<EthernetRouterIface_t*>* getInterfacesList(void);
 
 private:
 	EthernetRouter(void);
@@ -85,7 +85,7 @@ private:
 	void pushFrameToLwip(struct netif* netifPtr);
 
 	static EthernetRouter* ethernetRouter_;
-	EthernetRouterIface_t* firstInterface_ = NULL;
+	std::forward_list<EthernetRouterIface_t*> interfacesList_;
 	EthernetFrame inputFrame_;
 	uint16_t inputFrameSize_ = 0;
 	uint8_t nrtTimerNumber_ = 0;
