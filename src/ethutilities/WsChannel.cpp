@@ -41,52 +41,38 @@ using namespace jbkernel;
 using namespace jbutilities;
 
 
-LinkedList<WsChannel>* WsChannel::wsChannelsList_ = NULL;
+std::forward_list<WsChannel*> WsChannel::wsChannelsList_;
 
 
 
 WsChannel* WsChannel::createWsChannel(char* uri)
 {
-	if(wsChannelsList_ == NULL){
-		wsChannelsList_ = new LinkedList<WsChannel>();
+	static bool isCallbacksRegistered = false;
+	if(!isCallbacksRegistered){
 		websocket_register_callbacks(websocketOpenCallback, websocketCallback);
+		isCallbacksRegistered = true;
 	}
-	LinkedList<WsChannel>::LinkIterator* iterator =
-			wsChannelsList_->getIterator();
-	iterator->reset();
-	uint32_t listSize = wsChannelsList_->getSize();
-	for(uint32_t i = 0; i < listSize; i++){
-		WsChannel* channel = iterator->getCurrent();
-		iterator->nextLink();
-		if(channel->checkUri(uri))
-			return channel;
+	if(!uri)
+		return NULL;
+	WsChannel* ws = getWsChannel(uri);
+	if(!ws){
+		ws = new WsChannel(uri);
+		wsChannelsList_.push_front(ws);
 	}
-	WsChannel* newChannel = new WsChannel(uri);
-	wsChannelsList_->insertLast(newChannel);
-	return newChannel;
+	return ws;
 }
 
 
 
-WsChannel* WsChannel::getWsChannel(char* uri)
+WsChannel* WsChannel::getWsChannel(const char* uri)
 {
-	if(wsChannelsList_ == NULL)
+	if(!uri)
 		return NULL;
-	if(uri){
-		LinkedList<WsChannel>::LinkIterator* iterator =
-					wsChannelsList_->getIterator();
-		iterator->reset();
-		uint32_t listSize = wsChannelsList_->getSize();
-		for(uint32_t i = 0; i < listSize; i ++){
-			WsChannel* channel = iterator->getCurrent();
-			iterator->nextLink();
-			if(channel->checkUri(uri))
-				return channel;
-		}
-	}
-	else{
-		if(wsChannelsList_)
-			return wsChannelsList_->getFirst();
+	for(std::forward_list<WsChannel*>::iterator it = wsChannelsList_.begin();
+			it != wsChannelsList_.end(); it++){
+		WsChannel* wsChannel = *it;
+		if(!wsChannel->uri_.compare(uri))
+			return wsChannel;
 	}
 	return NULL;
 }
@@ -95,31 +81,19 @@ WsChannel* WsChannel::getWsChannel(char* uri)
 
 WsChannel::WsChannel(char* uri)
 {
-	for(uint32_t i = 0; i < WS_CHANNEL_MAX_NUM_CONNECTIONS; i++)
-		this->pcbs_[i] = NULL;
-	memset(this->uri_, 0, WS_CHANNEL_URI_MAX_SIZE);
-	strncpy(this->uri_, uri, WS_CHANNEL_URI_MAX_SIZE);
+	this->uri_ = uri;
 }
 
 
 
-bool WsChannel::checkUri(const char* uri)
+void WsChannel::checkPcbs(void)
 {
-	if(!strncmp(this->uri_, uri, WS_CHANNEL_URI_MAX_SIZE))
-		return true;
-	else
-		return false;
-}
-
-
-
-bool WsChannel::checkPcb(struct tcp_pcb* pcb)
-{
-	for(uint32_t i = 0; i < WS_CHANNEL_MAX_NUM_CONNECTIONS; i++){
-		if(this->pcbs_[i] == pcb)
+	this->pcbsList_.remove_if([](struct tcp_pcb* pcb){
+		if(pcb->state != ESTABLISHED)
 			return true;
-	}
-	return false;
+		else
+			return false;
+	});
 }
 
 
@@ -141,21 +115,18 @@ void WsChannel::deinitialize(void)
 
 void WsChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 {
-	if(parameter == NULL) {
-		for(uint32_t i = 0; i < WS_CHANNEL_MAX_NUM_CONNECTIONS; i++) {
-			if(this->pcbs_[i]){
-				if(this->pcbs_[i]->state != ESTABLISHED)
-					this->pcbs_[i] = NULL;
-				else if(buffer != NULL) {
-					disableInterrupts();
-					websocket_write(this->pcbs_[i], buffer, size, WS_BIN_MODE);
-					enableInterrupts();
-				}
-
-			}
+	this->checkPcbs();
+	if(!buffer)
+		return;
+	if(!parameter) {
+		for(std::forward_list<struct tcp_pcb*>::iterator it = this->pcbsList_.begin();
+				it != this->pcbsList_.end(); it++){
+			disableInterrupts();
+			websocket_write(*it, buffer, size, WS_BIN_MODE);
+			enableInterrupts();
 		}
 	}
-	else if(buffer != NULL){
+	else{
 		disableInterrupts();
 		WsConnectInfo_t* wsConnectInfo = (WsConnectInfo_t*)parameter;
 		websocket_write(wsConnectInfo->pcb, buffer, size, wsConnectInfo->mode);
@@ -180,27 +151,10 @@ void WsChannel::setParameter(const uint8_t number, void* const value)
 
 void WsChannel::websocketOpenCallback(struct tcp_pcb* pcb, const char* uri)
 {
-	if(wsChannelsList_ == NULL)
-		return;
-	LinkedList<WsChannel>::LinkIterator* iterator =
-				wsChannelsList_->getIterator();
-	iterator->reset();
-	uint32_t listSize = wsChannelsList_->getSize();
-	for(uint32_t i = 0; i < listSize; i ++){
-		WsChannel* channel = iterator->getCurrent();
-		iterator->nextLink();
-		if(channel->checkUri(uri)){
-			for(uint32_t j = 0; j < WS_CHANNEL_MAX_NUM_CONNECTIONS; j++){
-				if (channel->pcbs_[j] == NULL){
-					channel->pcbs_[j] = pcb;
-					break;
-				}
-				else if(channel->pcbs_[j]->state != ESTABLISHED){
-					channel->pcbs_[j] = pcb;
-					break;
-				}
-			}
-		}
+	WsChannel* channel = getWsChannel(uri);
+	if(channel){
+		channel->checkPcbs();
+		channel->pcbsList_.push_front(pcb);
 	}
 }
 
@@ -209,21 +163,17 @@ void WsChannel::websocketOpenCallback(struct tcp_pcb* pcb, const char* uri)
 void WsChannel::websocketCallback(struct tcp_pcb* pcb, uint8_t* data,
 		u16_t datalen, uint8_t mode)
 {
-	if(wsChannelsList_ == NULL)
-		return;
-	LinkedList<WsChannel>::LinkIterator* iterator =
-				wsChannelsList_->getIterator();
-	iterator->reset();
-	uint32_t listSize = wsChannelsList_->getSize();
-	for(uint32_t i = 0; i < listSize; i ++){
-		WsChannel* channel = iterator->getCurrent();
-		iterator->nextLink();
-		if(channel->checkPcb(pcb)){
-			channel->wsConnectInfo_.mode = mode;
-			channel->wsConnectInfo_.pcb = pcb;
-			if(channel->callback_){
-				channel->callback_->channelCallback(data, datalen,
-					channel, &channel->wsConnectInfo_);
+	for(std::forward_list<WsChannel*>::iterator it = wsChannelsList_.begin();
+			it != wsChannelsList_.end(); it++){
+		WsChannel* wsChannel = *it;
+		for(std::forward_list<struct tcp_pcb*>::iterator pcbIt = wsChannel->pcbsList_.begin();
+			pcbIt != wsChannel->pcbsList_.end(); pcbIt++){
+			if(*pcbIt == pcb){
+				WsConnectInfo_t connectInfo;
+				connectInfo.mode = mode;
+				connectInfo.pcb = pcb;
+				wsChannel->callback_->channelCallback(data, datalen,
+						wsChannel, &connectInfo);
 			}
 		}
 	}

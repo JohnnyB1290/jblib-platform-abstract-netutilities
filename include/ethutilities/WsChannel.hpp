@@ -30,6 +30,8 @@
 #include "jbkernel/IVoidChannel.hpp"
 #include "jbutilities/LinkedList.hpp"
 #include "httpd.h"
+#include <string>
+#include <forward_list>
 
 
 
@@ -54,7 +56,7 @@ class WsChannel : public IVoidChannel
 {
 public:
 	static WsChannel* createWsChannel(char* uri);
-	static WsChannel* getWsChannel(char* uri);
+	static WsChannel* getWsChannel(const char* uri);
 	virtual void initialize(void* (* const mallocFunc)(size_t),
 			const uint16_t txBufferSize, IChannelCallback* const callback);
 	virtual void deinitialize(void);
@@ -67,13 +69,11 @@ private:
 			u16_t datalen, uint8_t mode);
 	static void websocketOpenCallback(struct tcp_pcb* pcb, const char* uri);
 	WsChannel(char* uri);
-	bool checkUri(const char* uri);
-	bool checkPcb(struct tcp_pcb* pcb);
+	void checkPcbs(void);
 
-	static LinkedList<WsChannel>* wsChannelsList_;
-	char uri_[WS_CHANNEL_URI_MAX_SIZE];
-	struct tcp_pcb* pcbs_[WS_CHANNEL_MAX_NUM_CONNECTIONS];
-	WsConnectInfo_t wsConnectInfo_;
+	static std::forward_list<WsChannel*> wsChannelsList_;
+	std::string uri_;
+	std::forward_list<struct tcp_pcb*> pcbsList_;
 	IChannelCallback* callback_ = NULL;
 };
 
