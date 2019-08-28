@@ -59,6 +59,8 @@ public:
 	virtual void getParameter(const uint8_t number, void* const value);
 	virtual void setParameter(const uint8_t number, void* const value);
 	void setDestination(UdpHost_t* to);
+	uint32_t getDestinationHost();
+	uint16_t getDestinationPort();
 
 private:
 	static void recieveCallback(void* arg, struct udp_pcb* pcb, struct pbuf* p, const ip_addr_t* addr, u16_t port);

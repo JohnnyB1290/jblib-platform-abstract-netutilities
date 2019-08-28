@@ -174,6 +174,14 @@ void UdpChannel::setDestination(UdpHost_t* to) {
 	this->dstPort_ = to->port;
 }
 
+uint32_t UdpChannel::getDestinationHost() {
+	return this->dstIpaddr_.addr;
+}
+
+uint16_t UdpChannel::getDestinationPort() {
+	return this->dstPort_;
+}
+
 }
 
 #endif
