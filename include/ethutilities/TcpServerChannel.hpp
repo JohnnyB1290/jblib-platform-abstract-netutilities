@@ -62,6 +62,7 @@ private:
 	void send(void* arg);
 	void addConnectionToBuffer(void* ss);
 	void deleteConnectionFromBuffer(void* ss);
+	bool isConnectionInBuffer(void* ss);
 
 	struct tcp_pcb* mainPcb_ = NULL;
 	ip_addr_t srcIpaddr_ = {.addr = 0};

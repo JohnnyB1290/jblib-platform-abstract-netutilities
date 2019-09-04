@@ -331,7 +331,7 @@ void TcpServerChannel::tx(uint8_t* const buffer, const uint16_t size, void* para
 		return;
 	}
 	TcpServerParameters_t* ss = (TcpServerParameters_t*)parameter;
-	if(ss->p != NULL)
+	if((!this->isConnectionInBuffer(ss)) || (ss->p != NULL))
 		return;
 	uint8_t* data = buffer;
 	uint32_t unbufferedSize = size;
@@ -360,8 +360,11 @@ void TcpServerChannel::error(void* arg, err_t err)
 	printf("TCP Server on port %u error: error %i! \r\n",
 			ss->tcpServer->srcPort_, err);
 	#endif
-	if(arg)
+	TcpServerParameters_t* ss = (TcpServerParameters_t*)arg;
+	if (ss){
+		ss->tcpServer->deleteConnectionFromBuffer(arg);
 		free_s(arg);
+	}
 }
 
 
@@ -490,6 +493,17 @@ void TcpServerChannel::deleteConnectionFromBuffer(void* ss)
 		#endif
 		return;
 	}
+}
+
+
+
+bool TcpServerChannel::isConnectionInBuffer(void* ss)
+{
+	for(uint32_t i = 0; i < this->connectionsCounter_; i++) {
+		if(this->connectionsBuffer_[i] == ss)
+			return true;
+	}
+	return false;
 }
 
 }

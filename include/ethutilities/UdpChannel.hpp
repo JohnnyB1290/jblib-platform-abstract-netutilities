@@ -38,10 +38,13 @@ namespace ethutilities
 
 using namespace jbkernel;
 
-typedef struct {
-	uint32_t host;
-	uint16_t port;
+typedef struct
+{
+	uint32_t host = 0;
+	uint16_t port = 0;
 } UdpHost_t;
+
+
 
 class UdpChannel : public IVoidChannel
 {

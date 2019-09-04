@@ -104,6 +104,18 @@ void UdpChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 	uint32_t unbufSize = size;
 	uint32_t payloadSize = 0;
 	uint8_t* data = buffer;
+	ip_addr_t dstIpaddr = {.addr = 0};
+	uint16_t dstPort = 0;
+	UdpHost_t* dstHost = (UdpHost_t*)parameter;
+
+	if(dstHost == NULL){
+		dstIpaddr = this->dstIpaddr_;
+		dstPort = this->dstPort_;
+	}
+	else{
+		ip_addr_set_ip4_u32(&dstIpaddr, dstHost->host);
+		dstPort = dstHost->port;
+	}
 	while(unbufSize>0) {
 		payloadSize = MIN(unbufSize, TCP_MSS);
 		this->pTx_ = pbuf_alloc(PBUF_TRANSPORT, payloadSize, PBUF_RAM);
@@ -112,10 +124,10 @@ void UdpChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 		memcpy(this->pTx_->payload, data, payloadSize);
 		data = data + payloadSize*sizeof(uint8_t);
 		if(this->netif_ == (netif*)NULL)
-			udp_sendto(this->pcb_, this->pTx_, &this->dstIpaddr_, this->dstPort_);
+			udp_sendto(this->pcb_, this->pTx_, &dstIpaddr, dstPort);
 		else
-			udp_sendto_if(this->pcb_, this->pTx_, &this->dstIpaddr_,
-					this->dstPort_,this->netif_);
+			udp_sendto_if(this->pcb_, this->pTx_, &dstIpaddr,
+					dstPort, this->netif_);
 		pbuf_free(this->pTx_);
 		unbufSize = unbufSize - payloadSize;
 	}
