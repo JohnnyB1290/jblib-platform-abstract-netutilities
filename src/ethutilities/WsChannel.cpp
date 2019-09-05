@@ -69,7 +69,7 @@ WsChannel* WsChannel::getWsChannel(const char* uri)
 	if(!uri)
 		return NULL;
 	for(std::forward_list<WsChannel*>::iterator it = wsChannelsList_.begin();
-			it != wsChannelsList_.end(); it++){
+			it != wsChannelsList_.end(); ++it){
 		WsChannel* wsChannel = *it;
 		if(!wsChannel->uri_.compare(uri))
 			return wsChannel;
@@ -120,7 +120,7 @@ void WsChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 		return;
 	if(!parameter) {
 		for(std::forward_list<struct tcp_pcb*>::iterator it = this->pcbsList_.begin();
-				it != this->pcbsList_.end(); it++){
+				it != this->pcbsList_.end(); ++it){
 			disableInterrupts();
 			websocket_write(*it, buffer, size, WS_BIN_MODE);
 			enableInterrupts();
@@ -128,7 +128,8 @@ void WsChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 	}
 	else{
 		disableInterrupts();
-		WsConnectInfo_t* wsConnectInfo = (WsConnectInfo_t*)parameter;
+		WsConnectInfo_t* wsConnectInfo =
+				(WsConnectInfo_t*)(((IVoidChannel::ConnectionParameter_t*)parameter)->parameters);
 		websocket_write(wsConnectInfo->pcb, buffer, size, wsConnectInfo->mode);
 		enableInterrupts();
 	}
@@ -163,17 +164,23 @@ void WsChannel::websocketOpenCallback(struct tcp_pcb* pcb, const char* uri)
 void WsChannel::websocketCallback(struct tcp_pcb* pcb, uint8_t* data,
 		u16_t datalen, uint8_t mode)
 {
+	WsConnectInfo_t connectInfo;
+	IVoidChannel::ConnectionParameter_t connParameter = {
+			.parameters = &connectInfo,
+			.parametersSize = sizeof(WsConnectInfo_t)
+	};
 	for(std::forward_list<WsChannel*>::iterator it = wsChannelsList_.begin();
-			it != wsChannelsList_.end(); it++){
+			it != wsChannelsList_.end(); ++it){
 		WsChannel* wsChannel = *it;
 		for(std::forward_list<struct tcp_pcb*>::iterator pcbIt = wsChannel->pcbsList_.begin();
-			pcbIt != wsChannel->pcbsList_.end(); pcbIt++){
+			pcbIt != wsChannel->pcbsList_.end(); ++pcbIt){
 			if(*pcbIt == pcb){
-				WsConnectInfo_t connectInfo;
 				connectInfo.mode = mode;
 				connectInfo.pcb = pcb;
-				wsChannel->callback_->channelCallback(data, datalen,
-						wsChannel, &connectInfo);
+				if(wsChannel->callback_){
+					wsChannel->callback_->channelCallback(data, datalen,
+							wsChannel, &connParameter);
+				}
 			}
 		}
 	}

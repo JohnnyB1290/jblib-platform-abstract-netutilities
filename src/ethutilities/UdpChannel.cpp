@@ -106,13 +106,14 @@ void UdpChannel::tx(uint8_t* const buffer, const uint16_t size, void* parameter)
 	uint8_t* data = buffer;
 	ip_addr_t dstIpaddr = {.addr = 0};
 	uint16_t dstPort = 0;
-	UdpHost_t* dstHost = (UdpHost_t*)parameter;
-
-	if(dstHost == NULL){
+	IVoidChannel::ConnectionParameter_t* connParam =
+			(IVoidChannel::ConnectionParameter_t*)parameter;
+	if(connParam == NULL){
 		dstIpaddr = this->dstIpaddr_;
 		dstPort = this->dstPort_;
 	}
 	else{
+		UdpHost_t* dstHost = (UdpHost_t*)(connParam->parameters);
 		ip_addr_set_ip4_u32(&dstIpaddr, dstHost->host);
 		dstPort = dstHost->port;
 	}
@@ -142,10 +143,16 @@ void UdpChannel::recieveCallback(void* arg, struct udp_pcb* pcb,
 	UdpChannel* udpChannel = (UdpChannel*)arg;
 	udpChannel->dmSource_.host = addr->addr;
 	udpChannel->dmSource_.port = port;
+	IVoidChannel::ConnectionParameter_t connParam = {
+			.parameters = &(udpChannel->dmSource_),
+			.parametersSize = sizeof(UdpHost_t)
+	};
 	if(udpChannel->callback_) {
 		while(pNext){
-			udpChannel->callback_->channelCallback((uint8_t*)pNext->payload,
-					pNext->len, udpChannel, &(udpChannel->dmSource_));
+			if(udpChannel->callback_){
+				udpChannel->callback_->channelCallback((uint8_t*)pNext->payload,
+						pNext->len, udpChannel, &connParam);
+			}
 			pNext = pNext->next;
 		}
 	}

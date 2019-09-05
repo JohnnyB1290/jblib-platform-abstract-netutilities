@@ -192,8 +192,12 @@ err_t TcpServerChannel::receive(void* arg, struct tcp_pcb* tpcb,
 		struct pbuf* pNext = p;
 		while(pNext){
 			if(ss->tcpServer->callback_) {
+				IVoidChannel::ConnectionParameter_t connParam = {
+						.parameters = arg,
+						.parametersSize = sizeof(TcpServerParameters_t)
+				};
 				ss->tcpServer->callback_->channelCallback((uint8_t*)pNext->payload,
-						pNext->len, (void*)ss->tcpServer, arg);
+						pNext->len, (void*)ss->tcpServer, &connParam);
 			}
 			pNext = pNext->next;
 		}
@@ -324,13 +328,20 @@ void TcpServerChannel::tx(uint8_t* const buffer, const uint16_t size, void* para
 	if(this->connectionsCounter_ == 0)
 		return;
 	if(parameter== NULL) {
+		IVoidChannel::ConnectionParameter_t connParam = {
+				.parameters = NULL,
+				.parametersSize = sizeof(TcpServerParameters_t)
+		};
 		for(uint32_t i = 0; i < this->connectionsCounter_; i++) {
-			if(this->connectionsBuffer_[i])
-				this->tx(buffer, size, this->connectionsBuffer_[i]);
+			if(this->connectionsBuffer_[i]){
+				connParam.parameters = this->connectionsBuffer_[i];
+				this->tx(buffer, size, &connParam);
+			}
 		}
 		return;
 	}
-	TcpServerParameters_t* ss = (TcpServerParameters_t*)parameter;
+	TcpServerParameters_t* ss =
+			(TcpServerParameters_t*)(((IVoidChannel::ConnectionParameter_t*)parameter)->parameters);
 	if((!this->isConnectionInBuffer(ss)) || (ss->p != NULL))
 		return;
 	uint8_t* data = buffer;
@@ -348,7 +359,7 @@ void TcpServerChannel::tx(uint8_t* const buffer, const uint16_t size, void* para
 			pbuf_chain(ss->p,p);
 		unbufferedSize = unbufferedSize - payloadSize;
 	}
-	this->send(parameter);
+	this->send(ss);
 }
 
 
