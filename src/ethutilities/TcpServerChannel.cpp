@@ -52,7 +52,7 @@ typedef enum
 } TcpServerState_t;
 
 
-
+#pragma pack(push, 1)
 typedef struct
 {
   uint8_t state;
@@ -60,7 +60,7 @@ typedef struct
   struct pbuf* p;
   TcpServerChannel* tcpServer;
 }TcpServerParameters_t;
-
+#pragma pack(pop)
 
 
 TcpServerChannel::TcpServerChannel(uint8_t* srcIp, uint16_t srcPort) : IVoidChannel()

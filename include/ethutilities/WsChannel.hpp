@@ -43,13 +43,13 @@ namespace ethutilities
 using namespace jbkernel;
 using namespace jbutilities;
 
-
+#pragma pack(push, 1)
 typedef struct
 {
 	struct tcp_pcb* pcb = NULL;
 	uint8_t mode = 0;
 }WsConnectInfo_t;
-
+#pragma pack(pop)
 
 
 class WsChannel : public IVoidChannel
