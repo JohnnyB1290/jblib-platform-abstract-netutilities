@@ -108,7 +108,7 @@ void WsChannel::initialize(void* (* const mallocFunc)(size_t),
 
 void WsChannel::deinitialize(void)
 {
-
+	this->callback_ = NULL;
 }
 
 
