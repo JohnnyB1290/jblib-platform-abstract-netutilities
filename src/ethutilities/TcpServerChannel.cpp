@@ -366,12 +366,11 @@ void TcpServerChannel::tx(uint8_t* const buffer, const uint16_t size, void* para
 
 void TcpServerChannel::error(void* arg, err_t err)
 {
-	#if (USE_CONSOLE && TCP_SERVER_USE_CONSOLE)
 	TcpServerParameters_t* ss = (TcpServerParameters_t*)arg;
+	#if (USE_CONSOLE && TCP_SERVER_USE_CONSOLE)
 	printf("TCP Server on port %u error: error %i! \r\n",
 			ss->tcpServer->srcPort_, err);
 	#endif
-	TcpServerParameters_t* ss = (TcpServerParameters_t*)arg;
 	if (ss){
 		ss->tcpServer->deleteConnectionFromBuffer(arg);
 		free_s(arg);
@@ -405,7 +404,21 @@ void TcpServerChannel::close(struct tcp_pcb* tpcb, void* arg)
 
 TcpServerChannel::~TcpServerChannel(void)
 {
-	tcp_abort(this->mainPcb_);
+	for(uint32_t i = 0; i < this->connectionsCounter_; i++) {
+		if(this->connectionsBuffer_[i]){
+			struct tcp_pcb* tpcb = ((TcpServerParameters_t*)this->connectionsBuffer_[i])->pcb;
+			tcp_arg(tpcb, NULL);
+			tcp_sent(tpcb, NULL);
+			tcp_recv(tpcb, NULL);
+			tcp_err(tpcb, NULL);
+			tcp_poll(tpcb, NULL, 0);
+			tcp_close(tpcb);
+			free_s(this->connectionsBuffer_[i]);
+		}
+	}
+	tcp_arg(this->mainPcb_, NULL);
+	tcp_accept(this->mainPcb_, NULL);
+	tcp_close(this->mainPcb_);
 }
 
 
