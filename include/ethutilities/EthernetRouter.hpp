@@ -49,6 +49,7 @@ typedef struct EthernetRouterIface_t
 	struct netif* netifPtr = NULL;
 	ArpController* arpController = NULL;
 	std::forward_list<IEthernetListener*> listenersList;
+	std::forward_list<IEthernetListener*> listenersDeleteList;
 	uint8_t ip[4];
 	uint8_t gateway[4];
 	uint8_t netmask[4];

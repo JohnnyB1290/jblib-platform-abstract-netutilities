@@ -260,6 +260,20 @@ void EthernetRouter::routeFrames(void)
 						(*listenersIt)->parseFrame(&this->inputFrame_, this->inputFrameSize_,
 								routerIface->interface, routerIface);
 					}
+					if(!routerIface->listenersDeleteList.empty()){
+						for(std::forward_list<IEthernetListener*>::iterator listenersIt =
+								routerIface->listenersDeleteList.begin();
+								listenersIt != routerIface->listenersDeleteList.end(); ++listenersIt){
+							IEthernetListener* listener = *listenersIt;
+							routerIface->listenersList.remove_if([listener](IEthernetListener* current){
+								if(current == listener)
+									return true;
+								else
+									return false;
+							});
+						}
+						routerIface->listenersDeleteList.clear();
+					}
 				}
 			}
 		}
@@ -317,12 +331,7 @@ void EthernetRouter::addListener(IEthernetListener* listener)
 void EthernetRouter::deleteListener(IEthernetListener* listener,
 		EthernetRouterIface_t* routerInterface)
 {
-	routerInterface->listenersList.remove_if([listener](IEthernetListener* current){
-		if(current == listener)
-			return true;
-		else
-			return false;
-	});
+	routerInterface->listenersDeleteList.push_front(listener);
 }
 
 
