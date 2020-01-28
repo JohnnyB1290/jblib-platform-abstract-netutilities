@@ -31,8 +31,11 @@
 #include "jbkernel/jb_common.h"
 #include "ethutilities/EthernetUtilities.hpp"
 
-namespace jblib::ethutilities
+namespace jblib
 {
+namespace ethutilities
+{
+
 
 uint16_t EthernetUtilities::ipId_ = 0;
 
@@ -243,12 +246,30 @@ void EthernetUtilities::changeIp(uint8_t* frame, uint8_t* newDstIp, uint8_t* new
 			needProtoCsCalculation = 1;
 		}
 	}
+
+#if JB_LIB_PLATFORM == 1 //ZYNQ
+	uint8_t ipIsMoreFragments = (frame[ETX_IP_FLAG_FRAGOFFS_OFFSET] & 0x20) >> 5;
 	if(needProtoCsCalculation) {
-		adjustNetworkChecksum(&frame[offset],
-				&frame[ETX_IP_SIP_OFFSET], 4, newSrcIp, 4);
-		adjustNetworkChecksum(&frame[offset],
-				&frame[ETX_IP_DIP_OFFSET], 4, newDstIp, 4);
+		if(ipIsMoreFragments == 0){
+			frame[offset] = 0;
+			frame[offset + 1] = 0;
+		}
+		else{
+			adjustNetworkChecksum(&frame[offset],
+					&frame[ETX_IP_SIP_OFFSET], 4, newSrcIp, 4);
+			adjustNetworkChecksum(&frame[offset],
+					&frame[ETX_IP_DIP_OFFSET], 4, newDstIp, 4);
+		}
 	}
+#else
+	if(needProtoCsCalculation) {
+			adjustNetworkChecksum(&frame[offset],
+					&frame[ETX_IP_SIP_OFFSET], 4, newSrcIp, 4);
+			adjustNetworkChecksum(&frame[offset],
+					&frame[ETX_IP_DIP_OFFSET], 4, newDstIp, 4);
+	}
+#endif
+
 	memcpy(&frame[ETX_IP_DIP_OFFSET], newDstIp, ETX_PROTO_SIZE);
 	memcpy(&frame[ETX_IP_SIP_OFFSET], newSrcIp, ETX_PROTO_SIZE);
 
@@ -327,4 +348,5 @@ void EthernetUtilities::adjustNetworkChecksum(uint8_t* chksum, uint8_t* optr,
   chksum[1] = x & 0xff;
 }
 
+}
 }
