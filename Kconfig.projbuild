@@ -1,0 +1,45 @@
+menu "JBLib Net Utilities"
+	menu "DNS Server"
+		config JBLIB_DNS_SERVER_CONSOLE_ENABLE
+			bool "Enable console"
+			default y
+		
+		config JBLIB_DNS_SERVER_RESPONSE_TO_ALL_REQUESTS
+			bool "Send response to requests for any address"
+			default n
+			
+		config JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE
+			int "Max size of the host name"
+			range 64 1024
+			default 128
+
+		config JBLIB_DNS_SERVER_HOST_NAME_0
+			string "Host name 0"
+			default "johnnybravo.com"
+			
+		config JBLIB_DNS_SERVER_HOST_NAME_1
+			string "Host name 1"
+			default "www.johnnybravo.com"
+			
+		config JBLIB_DNS_SERVER_THREAD_STACK_SIZE
+			int "Thread stack size"
+			range 512 4096
+			default 2048
+
+		config JBLIB_DNS_SERVER_THREAD_PRIORITY
+			int "Thread priority"
+			range 1 32
+			default 1
+			
+		config JBLIB_DNS_SERVER_RECIEVE_BUFFER_SIZE
+			int "Recieve request buffer size"
+			range 256 1536
+			default 1536
+			
+		config JBLIB_DNS_SERVER_PORT
+			int "Port"
+			range 0 65535
+			default 53
+
+	endmenu  #DNS Server			
+endmenu  #JBLib Net Utilities

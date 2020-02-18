@@ -30,7 +30,9 @@
 #include "string.h"
 #include "ethutilities/EthernetQueue.hpp"
 
-namespace jblib::ethutilities
+namespace jblib
+{
+namespace ethutilities
 {
 
 
@@ -127,4 +129,5 @@ bool EthernetQueue::isAboveTreshold(void)
 					true : false;
 }
 
+}
 }

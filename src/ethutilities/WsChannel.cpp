@@ -28,7 +28,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 #include "jbkernel/jb_common.h"
-#if USE_LWIP && USE_WEB_SERVER
+#if USE_LWIP && USE_WEB_SERVER && (JB_LIB_OS == 0)
 #include <string.h>
 #include "ethutilities/WsChannel.hpp"
 
