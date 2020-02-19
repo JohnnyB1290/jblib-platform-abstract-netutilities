@@ -120,15 +120,27 @@ void DnsServer::start(void)
 {
     if(!this->isStarted_){
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGI(logTag_, "Start DNS Server");
+        #else
+        #if USE_CONSOLE
+        printf("%s Start DNS Server\n", logTag_);
+        #endif
+        #endif
         #endif
         tcpip_adapter_ip_info_t ipInfo;
         tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ipInfo);
         this->replyIp_= ipInfo.ip.addr;
         this->socket_ = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (this->socket_ == -1) {
+            #if JB_LIB_PLATFORM == 3
             ESP_LOGE(logTag_, "Can't create socket");
             perror("Failed to create socket");
+            #else
+            #if USE_CONSOLE
+            printf("%s Failed to create socket\n", logTag_);
+            #endif
+            #endif
             return;
         }
         struct sockaddr_in sin;
@@ -138,8 +150,14 @@ void DnsServer::start(void)
         sin.sin_addr.s_addr = htonl(INADDR_ANY);
         int err = bind(this->socket_, (struct sockaddr *)&sin, sizeof(struct sockaddr_in));
         if (err < 0){
+            #if JB_LIB_PLATFORM == 3
             ESP_LOGE(logTag_, "Can't bind socket");
             perror("Failed to bind socket");
+            #else
+            #if USE_CONSOLE
+            printf("%s Failed to bind socket\n", logTag_);
+            #endif
+            #endif
             close(socket_);
             socket_ = -1;
             return;
@@ -149,11 +167,17 @@ void DnsServer::start(void)
                 CONFIG_JBLIB_DNS_SERVER_THREAD_PRIORITY);
         this->isStarted_ = true;
     }
-#if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+    #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
     else{
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGI(logTag_, "Has been started already!");
+        #else
+        #if USE_CONSOLE
+        printf("%s Has been started already!\n", logTag_);
+        #endif
+        #endif
     }
-#endif
+    #endif
 }
 
 
@@ -162,18 +186,30 @@ void DnsServer::stop(void)
 {
     if(this->isStarted_){
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGI(logTag_, "Stop DNS Server");
+        #else
+        #if USE_CONSOLE
+        printf("%s Stop DNS Server\n", logTag_);
+        #endif
+        #endif
         #endif
         JbController::deleteMainProcedure(this);
         closesocket(this->socket_);
         this->socket_ = -1;
         isStarted_ = false;
     }
-#if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+    #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
     else{
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGI(logTag_, "Hasn't been started yet!");
+        #else
+        #if USE_CONSOLE
+        printf("%s Hasn't been started yet!\n", logTag_);
+        #endif
+        #endif
     }
-#endif
+    #endif
 }
 
 
@@ -187,8 +223,14 @@ void DnsServer::voidCallback(void* const source, void* parameter)
     FD_SET(this->socket_, &rfds);
     int s = select(this->socket_ + 1, &rfds, NULL, NULL, NULL);
     if (s < 0) {
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGE(logTag_, "Select error, stop DNS server");
         perror("Select error");
+        #else
+        #if USE_CONSOLE
+            printf("%s Select error, stop DNS server\n", logTag_);
+            #endif
+        #endif
         this->stop();
         return;
     }
@@ -200,31 +242,60 @@ void DnsServer::voidCallback(void* const source, void* parameter)
                 CONFIG_JBLIB_DNS_SERVER_RECIEVE_BUFFER_SIZE, 0,
                 (struct sockaddr*)&remotehost, &socklen);
         if(recLen < 0){
+            #if JB_LIB_PLATFORM == 3
             ESP_LOGE(logTag_, "Recvfrom error, stop DNS server");
             perror("Recvfrom error");
+            #else
+            #if USE_CONSOLE
+            printf("%s Recvfrom error, stop DNS server\n", logTag_);
+            #endif
+            #endif
             this->stop();
             return;
         }
-
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGI(logTag_, "Recieve packet");
+        #else
+        #if USE_CONSOLE
+        printf("%s Recieve packet\n", logTag_);
+        #endif
+        #endif
         #endif
         if (recLen <= sizeof(dns_header_t)){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
-            ESP_LOGW(logTag_, "Packet too small");
+            #if JB_LIB_PLATFORM == 3
+                ESP_LOGW(logTag_, "Packet too small");
+            #else
+                #if USE_CONSOLE
+            printf("%s Packet too small\n", logTag_);
+            #endif
+            #endif
             #endif
             return;
         }
         dns_header_t* header = (dns_header_t*)recvBuffer;
         if (header->flags.qr != 0){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
-            ESP_LOGW(logTag_, "Packet isn't query");
+            #if JB_LIB_PLATFORM == 3
+            ESP_LOGW(logTag_, "Packet isn't a query");
+            #else
+            #if USE_CONSOLE
+            printf("%s Packet isn't a query\n", logTag_);
+            #endif
+            #endif
             #endif
             return;
         }
         if(ntohs(header->n_record[0]) != 1){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+            #if JB_LIB_PLATFORM == 3
             ESP_LOGW(logTag_, "n_record[0] != 1");
+            #else
+            #if USE_CONSOLE
+            printf("%s n_record[0] != 1\n", logTag_);
+            #endif
+            #endif
             #endif
             return;
         }
@@ -232,7 +303,13 @@ void DnsServer::voidCallback(void* const source, void* parameter)
                 recLen - sizeof(dns_header_t), &query);
         if (len < 0){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+            #if JB_LIB_PLATFORM == 3
             ESP_LOGW(logTag_, "Can't parse Next Query");
+            #else
+            #if USE_CONSOLE
+            printf("%s Can't parse Next Query\n", logTag_);
+            #endif
+            #endif
             #endif
             return;
         }
@@ -259,7 +336,13 @@ void DnsServer::voidCallback(void* const source, void* parameter)
         sendto(this->socket_, recvBuffer, len + sizeof(struct dns_answer),
                0, (struct sockaddr*)&remotehost, socklen);
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+        #if JB_LIB_PLATFORM == 3
         ESP_LOGI(logTag_, "Send answer");
+        #else
+        #if USE_CONSOLE
+        printf("%s Send answer\n", logTag_);
+        #endif
+        #endif
         #endif
     }
 }
