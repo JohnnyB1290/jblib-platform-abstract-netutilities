@@ -164,7 +164,8 @@ void DnsServer::start(void)
         }
         JbController::addMainProcedure(this, NULL,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_STACK_SIZE,
-                CONFIG_JBLIB_DNS_SERVER_THREAD_PRIORITY);
+                CONFIG_JBLIB_DNS_SERVER_THREAD_PRIORITY,
+                (char*)"DnsServer");
         this->isStarted_ = true;
     }
     #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
