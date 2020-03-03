@@ -116,6 +116,28 @@ DnsServer::DnsServer(void) : IVoidCallback()
 
 
 
+void DnsServer::addHost(char* hostName)
+{
+    DnsHost_t* host = (DnsHost_t*)malloc_s(sizeof(DnsHost_t));
+    strncpy(host->name, hostName, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
+    this->hostsList_.push_front(*host);
+    free_s(host);
+}
+
+
+
+void DnsServer::deleteHost(char* hostName)
+{
+    if(!this->hostsList_.empty()){
+        this->hostsList_.remove_if([hostName](DnsHost_t item){
+             return !strncmp(hostName, item.name,
+                     CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
+        });
+    }
+}
+
+
+
 void DnsServer::start(void)
 {
     if(!this->isStarted_){
@@ -314,15 +336,30 @@ void DnsServer::voidCallback(void* const source, void* parameter)
             #endif
             return;
         }
-#if !CONFIG_JBLIB_DNS_SERVER_RESPONSE_TO_ALL_REQUESTS
-        if((strcmp(query.name, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_0) != 0) &&
-           (strcmp(query.name, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_1) != 0)){
+        #if !CONFIG_JBLIB_DNS_SERVER_RESPONSE_TO_ALL_REQUESTS
+        bool requestForMe = false;
+        if(!this->hostsList_.empty()){
+            for(std::forward_list<DnsHost_t>::iterator it =
+                    this->hostsList_.begin(); it != this->hostsList_.end(); ++it){
+                DnsHost_t host = *it;
+                if(!strcmp(query.name, host.name)){
+                    requestForMe = true;
+                }
+            }
+        }
+        if(!requestForMe){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
-            ESP_LOGI(logTag_, "Request not for my host");
+            #if JB_LIB_PLATFORM == 3
+            ESP_LOGI(logTag_, "Request not to my host");
+            #else
+            #if USE_CONSOLE
+            printf("%s Request not to my host\n", logTag_);
+            #endif
+            #endif
             #endif
             return;
         }
-#endif
+        #endif
         len += sizeof(dns_header_t);
         header = (dns_header_t *)recvBuffer;
         header->flags.qr = 1;
@@ -380,6 +417,16 @@ int DnsServer::parseNextQuery(void *data, int size, dns_query_t *query)
     }
     if (size < 4) return -1;
     query->name[len] = 0;
+
+    #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
+    #if JB_LIB_PLATFORM == 3
+    ESP_LOGI(logTag_, "Request for:%s", query->name);
+    #else
+    #if USE_CONSOLE
+    printf("%s Request for:%s\n", logTag_, query->name);
+    #endif
+    #endif
+    #endif
     memcpy(&query->type,ptr,2);
     ptr += 2;
     memcpy(&query->Class,ptr,2);

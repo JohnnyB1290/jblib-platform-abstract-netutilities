@@ -12,14 +12,6 @@ menu "JBLib Net Utilities"
 			int "Max size of the host name"
 			range 64 1024
 			default 128
-
-		config JBLIB_DNS_SERVER_HOST_NAME_0
-			string "Host name 0"
-			default "johnnybravo.com"
-			
-		config JBLIB_DNS_SERVER_HOST_NAME_1
-			string "Host name 1"
-			default "www.johnnybravo.com"
 			
 		config JBLIB_DNS_SERVER_THREAD_STACK_SIZE
 			int "Thread stack size"
