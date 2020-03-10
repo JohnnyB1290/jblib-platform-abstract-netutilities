@@ -288,9 +288,9 @@ void DnsServer::voidCallback(void* const source, void* parameter)
         if (recLen <= sizeof(dns_header_t)){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
             #if JB_LIB_PLATFORM == 3
-                ESP_LOGW(logTag_, "Packet too small");
+            ESP_LOGW(logTag_, "Packet too small");
             #else
-                #if USE_CONSOLE
+            #if USE_CONSOLE
             printf("%s Packet too small\n", logTag_);
             #endif
             #endif
