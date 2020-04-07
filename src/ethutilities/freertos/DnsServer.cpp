@@ -120,7 +120,9 @@ void DnsServer::addHost(char* hostName)
 {
     DnsHost_t* host = (DnsHost_t*)malloc_s(sizeof(DnsHost_t));
     strncpy(host->name, hostName, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
+    xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
     this->hostsList_.push_front(*host);
+    xSemaphoreGive(this->hostsListMutex_);
     free_s(host);
 }
 
@@ -128,12 +130,14 @@ void DnsServer::addHost(char* hostName)
 
 void DnsServer::deleteHost(char* hostName)
 {
+    xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
     if(!this->hostsList_.empty()){
         this->hostsList_.remove_if([hostName](DnsHost_t item){
              return !strncmp(hostName, item.name,
                      CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
         });
     }
+    xSemaphoreGive(this->hostsListMutex_);
 }
 
 
@@ -338,6 +342,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
         }
         #if !CONFIG_JBLIB_DNS_SERVER_RESPONSE_TO_ALL_REQUESTS
         bool requestForMe = false;
+        xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
         if(!this->hostsList_.empty()){
             for(std::forward_list<DnsHost_t>::iterator it =
                     this->hostsList_.begin(); it != this->hostsList_.end(); ++it){
@@ -347,6 +352,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
                 }
             }
         }
+        xSemaphoreGive(this->hostsListMutex_);
         if(!requestForMe){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
             #if JB_LIB_PLATFORM == 3

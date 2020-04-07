@@ -72,6 +72,7 @@ private:
     int socket_ = -1;
     uint32_t replyIp_ = 0;
     std::forward_list<DnsHost_t> hostsList_;
+    xSemaphoreHandle hostsListMutex_ = xSemaphoreCreateMutex();
 
     DnsServer(void);
     int parseNextQuery(void *data, int size, dns_query_t *query);
