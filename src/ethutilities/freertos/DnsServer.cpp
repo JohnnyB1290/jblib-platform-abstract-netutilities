@@ -96,12 +96,12 @@ typedef struct dns_answer
 
 #pragma pack(pop)
 
-DnsServer* DnsServer::dnsServer_ = NULL;
+DnsServer* DnsServer::dnsServer_ = nullptr;
 
 
 DnsServer* DnsServer::getDnsServer(void)
 {
-    if(dnsServer_ == NULL){
+    if(dnsServer_ == nullptr){
         dnsServer_ = new DnsServer();
     }
     return dnsServer_;
@@ -111,7 +111,9 @@ DnsServer* DnsServer::getDnsServer(void)
 
 DnsServer::DnsServer(void) : IVoidCallback()
 {
-
+    #if !CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE && (JB_LIB_PLATFORM == 3)
+    esp_log_level_set(logTag_, ESP_LOG_WARN);
+    #endif
 }
 
 
@@ -188,7 +190,7 @@ void DnsServer::start(void)
             socket_ = -1;
             return;
         }
-        JbController::addMainProcedure(this, NULL,
+        JbController::addMainProcedure(this, nullptr,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_STACK_SIZE,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_PRIORITY,
                 (char*)"DnsServer");
@@ -248,7 +250,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
     fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(this->socket_, &rfds);
-    int s = select(this->socket_ + 1, &rfds, NULL, NULL, NULL);
+    int s = select(this->socket_ + 1, &rfds, nullptr, nullptr, nullptr);
     if (s < 0) {
         #if JB_LIB_PLATFORM == 3
         ESP_LOGE(logTag_, "Select error, stop DNS server");
