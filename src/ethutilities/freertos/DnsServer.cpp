@@ -34,7 +34,7 @@
 
 #include "jbkernel/jb_common.h"
 #if USE_LWIP && JB_LIB_OS != 0
-#include <string.h>
+#include <cstring>
 #include <sys/socket.h>
 #include <tcpip_adapter.h>
 #include "ethutilities/freertos/DnsServer.hpp"
@@ -99,7 +99,7 @@ typedef struct dns_answer
 DnsServer* DnsServer::dnsServer_ = nullptr;
 
 
-DnsServer* DnsServer::getDnsServer(void)
+DnsServer* DnsServer::getDnsServer()
 {
     if(dnsServer_ == nullptr){
         dnsServer_ = new DnsServer();
@@ -109,7 +109,7 @@ DnsServer* DnsServer::getDnsServer(void)
 
 
 
-DnsServer::DnsServer(void) : IVoidCallback()
+DnsServer::DnsServer() : IVoidCallback()
 {
     #if !CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE && (JB_LIB_PLATFORM == 3)
     esp_log_level_set(logTag_, ESP_LOG_WARN);
@@ -120,12 +120,14 @@ DnsServer::DnsServer(void) : IVoidCallback()
 
 void DnsServer::addHost(char* hostName)
 {
-    DnsHost_t* host = (DnsHost_t*)malloc_s(sizeof(DnsHost_t));
-    strncpy(host->name, hostName, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
-    xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
-    this->hostsList_.push_front(*host);
-    xSemaphoreGive(this->hostsListMutex_);
-    free_s(host);
+    auto* host = (DnsHost_t*)malloc_s(sizeof(DnsHost_t));
+    if(host){
+        strncpy(host->name, hostName, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
+        xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
+        this->hostsList_.push_front(*host);
+        xSemaphoreGive(this->hostsListMutex_);
+        free_s(host);
+    }
 }
 
 
@@ -144,7 +146,7 @@ void DnsServer::deleteHost(char* hostName)
 
 
 
-void DnsServer::start(void)
+void DnsServer::start()
 {
     if(!this->isStarted_){
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
@@ -171,7 +173,7 @@ void DnsServer::start(void)
             #endif
             return;
         }
-        struct sockaddr_in sin;
+        struct sockaddr_in sin{};
         memset(&sin,0, sizeof(sin));
         sin.sin_family = PF_INET;
         sin.sin_port = htons(CONFIG_JBLIB_DNS_SERVER_PORT);
@@ -193,7 +195,7 @@ void DnsServer::start(void)
         JbController::addMainProcedure(this, nullptr,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_STACK_SIZE,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_PRIORITY,
-                (char*)"DnsServer");
+                "DnsServer");
         this->isStarted_ = true;
     }
     #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
@@ -211,7 +213,7 @@ void DnsServer::start(void)
 
 
 
-void DnsServer::stop(void)
+void DnsServer::stop()
 {
     if(this->isStarted_){
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
@@ -265,7 +267,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
     }
     else if ((s > 0) && FD_ISSET(this->socket_, &rfds)){
         uint8_t recvBuffer[CONFIG_JBLIB_DNS_SERVER_RECIEVE_BUFFER_SIZE];
-        struct sockaddr_in remotehost;
+        struct sockaddr_in remotehost{};
         socklen_t socklen = sizeof(remotehost);
         int recLen = recvfrom(this->socket_, recvBuffer,
                 CONFIG_JBLIB_DNS_SERVER_RECIEVE_BUFFER_SIZE, 0,
@@ -303,7 +305,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
             #endif
             return;
         }
-        dns_header_t* header = (dns_header_t*)recvBuffer;
+        auto* header = (dns_header_t*)recvBuffer;
         if (header->flags.qr != 0){
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
             #if JB_LIB_PLATFORM == 3
@@ -346,9 +348,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
         bool requestForMe = false;
         xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
         if(!this->hostsList_.empty()){
-            for(std::forward_list<DnsHost_t>::iterator it =
-                    this->hostsList_.begin(); it != this->hostsList_.end(); ++it){
-                DnsHost_t host = *it;
+            for(auto host : this->hostsList_){
                 if(!strcmp(query.name, host.name)){
                     requestForMe = true;
                 }
@@ -372,7 +372,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
         header = (dns_header_t *)recvBuffer;
         header->flags.qr = 1;
         header->n_record[1] = htons(1);
-        dns_answer_t* answer = (struct dns_answer*)(recvBuffer + len);
+        auto* answer = (struct dns_answer*)(recvBuffer + len);
         answer->name = htons(0xC00C);
         answer->type = htons(1);
         answer->Class = htons(1);
@@ -399,7 +399,7 @@ int DnsServer::parseNextQuery(void *data, int size, dns_query_t *query)
 {
     int len = 0;
     int lables = 0;
-    uint8_t* ptr = (uint8_t *)data;
+    auto* ptr = (uint8_t *)data;
     while (true) {
         uint8_t lable_len;
         if (size <= 0) return -1;

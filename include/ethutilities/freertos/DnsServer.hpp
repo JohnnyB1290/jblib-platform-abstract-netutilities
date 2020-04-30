@@ -44,9 +44,9 @@ namespace ethutilities
 class DnsServer : public jblib::jbkernel::IVoidCallback
 {
 public:
-    static DnsServer* getDnsServer(void);
-    void start(void);
-    void stop(void);
+    static DnsServer* getDnsServer();
+    void start();
+    void stop();
     void addHost(char* hostName);
     void deleteHost(char* hostName);
 
@@ -65,7 +65,7 @@ private:
         char name[CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE];
     }DnsHost_t;
 
-    static constexpr char* logTag_ = (char*)"[ DNS Server ]:";
+    static constexpr const char* logTag_ = "[ DNS Server ]:";
     static DnsServer* dnsServer_;
 
     bool isStarted_ = false;
@@ -74,9 +74,9 @@ private:
     std::forward_list<DnsHost_t> hostsList_;
     xSemaphoreHandle hostsListMutex_ = xSemaphoreCreateMutex();
 
-    DnsServer(void);
+    DnsServer();
     int parseNextQuery(void *data, int size, dns_query_t *query);
-    virtual void voidCallback(void* const source, void* parameter);
+    void voidCallback(void* source, void* parameter) override;
 };
 
 }
