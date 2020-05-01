@@ -15,7 +15,7 @@ menu "JBLib Net Utilities"
 			
 		config JBLIB_DNS_SERVER_THREAD_STACK_SIZE
 			int "Thread stack size"
-			range 512 4096
+			range 512 8192
 			default 2048
 
 		config JBLIB_DNS_SERVER_THREAD_PRIORITY

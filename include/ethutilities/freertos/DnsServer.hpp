@@ -65,7 +65,7 @@ private:
         char name[CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE];
     }DnsHost_t;
 
-    static constexpr const char* logTag_ = "[ DNS Server ]:";
+    static constexpr const char* logTag_ = "[ DNS Server ]";
     static DnsServer* dnsServer_;
 
     bool isStarted_ = false;
