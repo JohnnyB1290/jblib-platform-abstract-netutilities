@@ -188,8 +188,8 @@ void DnsServer::start()
             printf("%s Failed to bind socket\n", logTag_);
             #endif
             #endif
-            close(socket_);
-            socket_ = -1;
+            closesocket(this->socket_);
+            this->socket_ = -1;
             return;
         }
         JbController::addMainProcedure(this, nullptr,

@@ -1,5 +1,7 @@
 menu "JBLib Net Utilities"
+
 	menu "DNS Server"
+	
 		config JBLIB_DNS_SERVER_CONSOLE_ENABLE
 			bool "Enable console"
 			default y
@@ -16,7 +18,7 @@ menu "JBLib Net Utilities"
 		config JBLIB_DNS_SERVER_THREAD_STACK_SIZE
 			int "Thread stack size"
 			range 512 8192
-			default 2048
+			default 3072
 
 		config JBLIB_DNS_SERVER_THREAD_PRIORITY
 			int "Thread priority"
@@ -33,5 +35,30 @@ menu "JBLib Net Utilities"
 			range 0 65535
 			default 53
 
-	endmenu  #DNS Server			
+	endmenu  #DNS Server		
+
+	menu "UDP Channel"
+	
+		config JBLIB_UDP_CHANNEL_CONSOLE_ENABLE
+			bool "Enable console"
+			default n
+			
+		config JBLIB_UDP_CHANNEL_THREAD_STACK_SIZE
+			int "Thread stack size"
+			range 512 8192
+			default 2048
+
+		config JBLIB_UDP_CHANNEL_THREAD_PRIORITY
+			int "Thread priority"
+			range 1 32
+			default 1
+
+		config JBLIB_UDP_CHANNEL_RX_BUFFER_SIZE
+			int "Temp rx buffer size"
+			range 128 4096 
+			default 2048
+
+	endmenu  #UDP Channel	
+
+	
 endmenu  #JBLib Net Utilities
