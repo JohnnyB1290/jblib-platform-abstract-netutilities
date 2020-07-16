@@ -96,7 +96,7 @@ namespace jblib
             memset(&this->dstAddr_, 0, sizeof(this->dstAddr_));
             this->dstAddr_.sin_family = PF_INET;
             this->dstAddr_.sin_port = htons(srcPort);
-            if(srcIp){
+            if(dstIp){
                 this->dstAddr_.sin_addr.s_addr =
                         htonl(LWIP_MAKEU32(dstIp[0], dstIp[1], dstIp[2], dstIp[3]));
             }
