@@ -51,19 +51,19 @@ namespace jblib
         public:
             UdpChannel(uint8_t* srcIp, uint16_t srcPort, uint8_t* dstIp, uint16_t dstPort);
             UdpChannel(uint16_t srcPort, uint8_t* dstIp, uint16_t dstPort);
-            virtual ~UdpChannel(void);
-            virtual void initialize(void* (* const mallocFunc)(size_t),
-                                    const uint16_t txBufferSize, IChannelCallback* const callback);
-            virtual void deinitialize(void);
-            virtual void tx(uint8_t* const buffer, const uint16_t size, void* parameter);
-            virtual void getParameter(const uint8_t number, void* const value);
-            virtual void setParameter(const uint8_t number, void* const value);
+            ~UdpChannel() override;
+            void initialize(void* (* mallocFunc)(size_t),
+                    uint16_t txBufferSize, IChannelCallback* callback) override;
+            void deinitialize() override;
+            void tx(uint8_t* buffer, uint16_t size, void* parameter) override;
+            void getParameter(uint8_t number, void* value) override;
+            void setParameter(uint8_t number, void* value) override;
             void setDestination(UdpHost_t* to);
             uint32_t getDestinationHost();
             uint16_t getDestinationPort();
 
         protected:
-            virtual void voidCallback(void* source, void* parameter);
+            void voidCallback(void* source, void* parameter) override;
 
             int socket_ = -1;
             struct sockaddr_in srcAddr_{};
@@ -74,7 +74,7 @@ namespace jblib
 
         private:
             static constexpr const char* logTag_ = "[ UDP Channel ]";
-            void construct(uint8_t* srcIp, uint16_t srcPort, uint8_t* dstIp, uint16_t dstPort);
+            void construct(const uint8_t* srcIp, uint16_t srcPort, const uint8_t* dstIp, uint16_t dstPort);
 
             jblib::jbkernel::JbKernel::ProceduresListItem* receiveTaskHandle_ = nullptr;
         };

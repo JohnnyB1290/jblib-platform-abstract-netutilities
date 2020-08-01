@@ -55,7 +55,7 @@ namespace jblib
 
 
 
-        void UdpChannel::construct(uint8_t* srcIp, uint16_t srcPort, uint8_t* dstIp, uint16_t dstPort)
+        void UdpChannel::construct(const uint8_t* srcIp, uint16_t srcPort, const uint8_t* dstIp, uint16_t dstPort)
         {
             this->socket_ = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
             if (this->socket_ == -1) {
@@ -103,6 +103,7 @@ namespace jblib
             else{
                 this->dstAddr_.sin_addr.s_addr = htonl(INADDR_ANY);
             }
+            this->dstAddr_.sin_port = htons(dstPort);
             this->receiveTaskHandle_ = JbKernel::addMainProcedure(this, nullptr,
                     CONFIG_JBLIB_UDP_CHANNEL_THREAD_STACK_SIZE,
                     CONFIG_JBLIB_UDP_CHANNEL_THREAD_PRIORITY, logTag_);
@@ -110,7 +111,7 @@ namespace jblib
 
 
 
-        UdpChannel::~UdpChannel(void)
+        UdpChannel::~UdpChannel()
         {
             if((this->socket_ < 0)){
                 closesocket(this->socket_);
@@ -187,7 +188,7 @@ namespace jblib
 
 
 
-        void UdpChannel::deinitialize(void)
+        void UdpChannel::deinitialize()
         {
             this->callback_ = nullptr;
         }
