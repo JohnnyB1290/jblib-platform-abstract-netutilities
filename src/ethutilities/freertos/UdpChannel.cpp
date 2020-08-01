@@ -139,6 +139,11 @@ namespace jblib
             }
             int length = sendto(this->socket_, buffer, size, 0, (struct sockaddr*)&dstAddr, sizeof(dstAddr));
             if (length < 0) {
+                #if !JBLIB_UDP_CHANNEL_CONSOLE_ENABLE
+                if(errno == 118){
+                    return;
+                }
+                #endif
                 #if JB_LIB_PLATFORM == 3
                 ESP_LOGE(logTag_, "sendto failed: errno %d", errno);
                 #else
