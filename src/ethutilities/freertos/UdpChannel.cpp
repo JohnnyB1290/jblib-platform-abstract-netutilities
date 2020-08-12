@@ -57,6 +57,9 @@ namespace jblib
 
         void UdpChannel::construct(const uint8_t* srcIp, uint16_t srcPort, const uint8_t* dstIp, uint16_t dstPort)
         {
+            #if !CONFIG_JBLIB_UDP_CHANNEL_CONSOLE_ENABLE && (JB_LIB_PLATFORM == 3)
+            esp_log_level_set(logTag_, ESP_LOG_WARN);
+            #endif
             this->socket_ = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
             if (this->socket_ == -1) {
                 #if JB_LIB_PLATFORM == 3
@@ -138,7 +141,8 @@ namespace jblib
                 dstAddr.sin_port = htons(dstHost->port);
                 dstAddr.sin_addr.s_addr = dstHost->host;
             }
-            int length = sendto(this->socket_, buffer, size, 0, (struct sockaddr*)&dstAddr, sizeof(dstAddr));
+            int length = sendto(this->socket_, buffer, size, O_NONBLOCK | MSG_DONTWAIT, (struct sockaddr*)&dstAddr, sizeof(dstAddr));
+            ESP_LOGI(logTag_, "sendto %i bytes", length);
             if (length < 0) {
                 #if !JBLIB_UDP_CHANNEL_CONSOLE_ENABLE
                 if(errno == 118){
