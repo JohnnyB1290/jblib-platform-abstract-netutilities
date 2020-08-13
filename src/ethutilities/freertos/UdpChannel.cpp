@@ -150,7 +150,7 @@ namespace jblib
                 }
                 #endif
                 #if JB_LIB_PLATFORM == 3
-                ESP_LOGE(logTag_, "sendto failed: errno %d", errno);
+                ESP_LOGI(logTag_, "sendto failed: errno %d", errno);
                 #else
                 #if USE_CONSOLE
                 printf("%s recvfrom failed: errno %d\n", logTag_, errno);
