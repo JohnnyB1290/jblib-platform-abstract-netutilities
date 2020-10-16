@@ -70,6 +70,7 @@ public:
 	virtual ~ArpController(void);
 	virtual void parseFrame(EthernetFrame* const frame,
 				uint16_t frameSize, IVoidEthernet* const source, void* parameter);
+	void sendGratiousArp(uint8_t* srcIp);
 	void sendArpRequest(uint8_t* dstIp);
 	void sendArpRequest(uint8_t* dstIp, uint8_t* srcIp);
 	void addIpForArpReply(uint8_t* ip);
@@ -82,10 +83,9 @@ public:
 
 private:
 	int16_t getArpTableIndex(uint8_t* ip);
-	void createReply(uint8_t* request, uint8_t* reply,
-			uint8_t* srcMac, uint16_t* frameSize);
-	void createRequest(const uint8_t* dstIp, uint8_t* srcMac,uint8_t* srcIp,
-			uint8_t* request, uint16_t* frameSize);
+	void createReply(uint8_t* request, uint8_t* reply, uint8_t* srcMac, uint16_t* frameSize);
+	void createReply(const uint8_t* dstMac, const uint8_t* dstIp, uint8_t* srcMac, uint8_t* srcIp, uint8_t* reply, uint16_t* frameSize);
+	void createRequest(const uint8_t* dstIp, uint8_t* srcMac,uint8_t* srcIp, uint8_t* request, uint16_t* frameSize);
 
 	uint8_t* mac_ = NULL;
 	IVoidEthernet* ethernetAdapter_ = NULL;
