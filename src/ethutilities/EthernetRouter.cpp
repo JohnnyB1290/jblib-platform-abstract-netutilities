@@ -204,17 +204,27 @@ void EthernetRouter::voidCallback(void* const source, void* parameter)
 						1000, this, (void*)CALLBACK_TYPE_LWIP_MS);
 			}
 			else if(timeEngineParameters->data == (void*)CALLBACK_TYPE_LINK_CHECK) {
+				bool gratious = false;
 				for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
 						it != this->interfacesList_.end(); ++it){
 					EthernetRouterIface_t* routerIface = *it;
 					if(this->checkLink_ || (routerIface->link == 0)) {
 						routerIface->interface->getParameter(PARAMETER_LINK, &(routerIface->link));
-						if(routerIface->link)
+						if(routerIface->link) {
+							gratious = true;
 							netif_set_link_up(routerIface->netifPtr);
-						else
+						} else {
 							netif_set_link_down(routerIface->netifPtr);
+						}
 					}
 					routerIface->arpController->voidCallback(this, NULL);
+				}
+				if(gratious) {
+					for(std::forward_list<EthernetRouterIface_t*>::iterator it = this->interfacesList_.begin();
+											it != this->interfacesList_.end(); ++it){
+						EthernetRouterIface_t* routerIface = *it;
+						routerIface->arpController->sendGratiousArp(NULL);
+					}
 				}
 				TimeEngine::getTimeEngine()->setNrtEvent(this->nrtTimerNumber_,
 						1000000, this, (void*)CALLBACK_TYPE_LINK_CHECK);

@@ -65,7 +65,38 @@ ArpTable_t* ArpController::getArpTable(void)
 	return &this->arpTable_;
 }
 
+void ArpController::createReply(const uint8_t* dstMac, const uint8_t* dstIp, uint8_t* srcMac, uint8_t* srcIp, uint8_t* reply, uint16_t* frameSize) {
+	*frameSize = ETX_ETH_HEADER_LEN + ETX_ARP_BODY_LEN;
+	if(dstMac) {
+		memcpy(reply + ETX_ETH_D_MAC_OFFSET, dstMac, ETX_HW_SIZE);
+	} else {
+		memset(reply + ETX_ETH_D_MAC_OFFSET, 0xff, ETX_HW_SIZE);
+	}
+	memcpy(reply + ETX_ETH_S_MAC_OFFSET, srcMac, ETX_HW_SIZE);
+	reply[ETX_ETH_ETHER_TYPE_OFFSET] = 0x08;
+	reply[ETX_ETH_ETHER_TYPE_OFFSET + 1] = 0x06; // ARP
+	reply[ETX_ARP_HW_TYPE_OFFSET] = 0x00;
+	reply[ETX_ARP_HW_TYPE_OFFSET + 1] = 0x01; // ETHERNET
+	reply[ETX_ARP_PROTO_TYPE_OFFSET] = 0x08;
+	reply[ETX_ARP_PROTO_TYPE_OFFSET + 1] = 0x00;//ip
+	reply[ETX_ARP_HW_SIZE_OFFSET] = 0x06;
+	reply[ETX_ARP_PROTO_SIZE_OFFSET] = 0x04;
+	reply[ETX_ARP_OPCODE_OFFSET] = 0x00;//reply
+	reply[ETX_ARP_OPCODE_OFFSET + 1] = 0x02;//reply
+	memcpy(reply + ETX_ARP_SENDER_MAC_OFFSET, srcMac, ETX_HW_SIZE);
+	memcpy(reply + ETX_ARP_SENDER_IP_OFFSET, srcIp, ETX_PROTO_SIZE);
 
+	if(dstMac) {
+		memcpy(reply + ETX_ARP_TARGET_MAC_OFFSET, dstMac, ETX_HW_SIZE);
+	} else {
+		memset(reply + ETX_ARP_TARGET_MAC_OFFSET, 0xff, ETX_HW_SIZE);
+	}
+	if(dstIp) {
+		memcpy(reply + ETX_ARP_TARGET_IP_OFFSET, dstIp, ETX_PROTO_SIZE);
+	} else {
+		memset(reply + ETX_ARP_TARGET_IP_OFFSET, 0xff, ETX_PROTO_SIZE);
+	}
+}
 
 void ArpController::createReply(uint8_t* request, uint8_t* reply,
 		uint8_t* srcMac, uint16_t* frameSize)
@@ -239,13 +270,43 @@ void ArpController::parseFrame(EthernetFrame* const frame,
 }
 
 
+void ArpController::sendGratiousArp(uint8_t* srcIp) {
+	uint8_t* outputFrame = (uint8_t*)malloc_s(sizeof(EthernetFrame));
+	if(outputFrame == NULL)
+		return;
+	uint16_t outputFrameSize = 0;
+
+	#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+	char* adapterName;
+	this->ethernetAdapter_->getParameter(PARAMETER_NAME, (void*)&adapterName);
+	#endif
+	if(srcIp == NULL){
+		for(uint32_t i = 0; i < this->ipTableForReply_.ipCount; i++) {
+			this->createReply(NULL, this->ipTableForReply_.ip[i], this->mac_, this->ipTableForReply_.ip[i], outputFrame, &outputFrameSize);
+			//
+			this->ethernetAdapter_->addToTxQueue((EthernetFrame*)outputFrame, outputFrameSize);
+			#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+			printf("%s Send gratious ARP FROM %i.%i.%i.%i ",
+					adapterName, this->ipTableForReply_.ip[i][0], this->ipTableForReply_.ip[i][1], this->ipTableForReply_.ip[i][2], this->ipTableForReply_.ip[i][3]);
+			#endif
+		}
+	}
+	else {
+		this->createReply(NULL, srcIp, this->mac_, srcIp, outputFrame, &outputFrameSize);
+		//
+		this->ethernetAdapter_->addToTxQueue((EthernetFrame*)outputFrame, outputFrameSize);
+		#if (USE_CONSOLE && ARP_CONTROLLER_USE_CONSOLE)
+		printf("%s Send gratious ARP FROM %i.%i.%i.%i ",
+				adapterName, srcIp[0], srcIp[1], srcIp[2], srcIp[3]);
+		#endif
+	}
+	free_s(outputFrame);
+}
 
 void ArpController::sendArpRequest(uint8_t* dstIp)
 {
 	this->sendArpRequest(dstIp, NULL);
 }
-
-
 
 void ArpController::sendArpRequest(uint8_t* dstIp, uint8_t* srcIp)
 {
