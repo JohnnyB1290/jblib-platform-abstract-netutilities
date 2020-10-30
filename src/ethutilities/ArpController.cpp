@@ -47,8 +47,6 @@ ArpController::ArpController(IVoidEthernet* ethernetAdapter) :
 {
 	this->ethernetAdapter_ = ethernetAdapter;
 	this->ethernetAdapter_->getParameter(PARAMETER_MAC, (void*)&(this->mac_));
-	memset(&(this->ipTableForReply_), 0, sizeof(IpTableForReply_t));
-	memset(&(this->arpTable_), 0, sizeof(ArpTable_t));
 }
 
 

@@ -40,16 +40,16 @@ using namespace jbkernel;
 
 #pragma pack(push, 1)
 typedef struct {
-	uint8_t ip[ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY][ETX_PROTO_SIZE];
-	uint8_t mask[ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY][ETX_PROTO_SIZE];
+	uint8_t ip[ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY][ETX_PROTO_SIZE]{};
+	uint8_t mask[ARP_CONTROLLER_MAX_NUM_IP_FOR_REPLY][ETX_PROTO_SIZE]{};
 	uint16_t ipCount = 0;
 }IpTableForReply_t;
 
 
 
 typedef struct{
-	uint8_t ip[ETX_PROTO_SIZE]; 		// ip
-	uint8_t mac[ETX_HW_SIZE]; 			//mac
+	uint8_t ip[ETX_PROTO_SIZE]{}; 		// ip
+	uint8_t mac[ETX_HW_SIZE]{}; 			//mac
 	uint32_t timeAfterUpdate = 0;		//time after last arp update
 }ArpTableLine_t;
 
