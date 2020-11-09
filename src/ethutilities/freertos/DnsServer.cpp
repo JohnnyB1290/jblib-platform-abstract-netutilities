@@ -32,13 +32,18 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+#include "esp_idf_version.h"
 #include "jbkernel/jb_common.h"
 #if USE_LWIP && JB_LIB_OS != 0
 #include <cstring>
 #include <sys/socket.h>
-#include <tcpip_adapter.h>
 #include "ethutilities/freertos/DnsServer.hpp"
 #include "jbdrivers/JbController.hpp"
+#if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 0, 0))
+#include "tcpip_adapter.h"
+#else
+#include "esp_netif.h"
+#endif
 
 namespace jblib
 {
