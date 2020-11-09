@@ -39,7 +39,7 @@
 #include <sys/socket.h>
 #include "ethutilities/freertos/DnsServer.hpp"
 #include "jbdrivers/JbController.hpp"
-#if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 0, 0))
+#if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 1, 0))
 #include "tcpip_adapter.h"
 #else
 #include "esp_netif.h"
