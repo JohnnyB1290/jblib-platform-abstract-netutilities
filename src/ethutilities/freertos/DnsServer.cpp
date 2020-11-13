@@ -39,6 +39,7 @@
 #include <sys/socket.h>
 #include "ethutilities/freertos/DnsServer.hpp"
 #include "jbdrivers/JbController.hpp"
+#include <netdb.h>
 #if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 1, 0))
 #include "tcpip_adapter.h"
 #else
@@ -123,29 +124,24 @@ DnsServer::DnsServer() : IVoidCallback()
 
 
 
-void DnsServer::addHost(char* hostName)
+void DnsServer::addHost(const char* hostName, bool redirectRequest)
 {
-    auto* host = (DnsHost_t*)malloc_s(sizeof(DnsHost_t));
-    if(host){
-        strncpy(host->name, hostName, CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
-        xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
-        this->hostsList_.push_front(*host);
-        xSemaphoreGive(this->hostsListMutex_);
-        free_s(host);
-    }
+    DnsHostRecord record;
+    record.name = hostName;
+    record.redirectRequest = redirectRequest;
+    xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
+    this->hostsList_.push_front(record);
+    xSemaphoreGive(this->hostsListMutex_);
 }
 
 
 
-void DnsServer::deleteHost(char* hostName)
+void DnsServer::deleteHost(const char* hostName)
 {
     xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
-    if(!this->hostsList_.empty()){
-        this->hostsList_.remove_if([hostName](DnsHost_t item){
-             return !strncmp(hostName, item.name,
-                     CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE);
-        });
-    }
+    this->hostsList_.remove_if([hostName](DnsHostRecord item){
+         return (item.name == hostName);
+    });
     xSemaphoreGive(this->hostsListMutex_);
 }
 
@@ -349,18 +345,30 @@ void DnsServer::voidCallback(void* const source, void* parameter)
             #endif
             return;
         }
+        uint32_t addr = this->replyIp_;
         #if !CONFIG_JBLIB_DNS_SERVER_RESPONSE_TO_ALL_REQUESTS
         bool requestForMe = false;
+        bool redirectRequest = false;
         xSemaphoreTake(this->hostsListMutex_, portMAX_DELAY);
-        if(!this->hostsList_.empty()){
-            for(auto host : this->hostsList_){
-                if(!strcmp(query.name, host.name)){
-                    requestForMe = true;
-                }
+        for(auto& host : this->hostsList_){
+            if(host.name == query.name){
+                requestForMe = true;
+                redirectRequest = host.redirectRequest;
+                break;
             }
         }
         xSemaphoreGive(this->hostsListMutex_);
-        if(!requestForMe){
+        if(requestForMe){
+            if(redirectRequest){
+                struct hostent* hp = gethostbyname(query.name);
+                if (!hp){
+                    ESP_LOGE(logTag_, "hp = NULL, didn't got IP, host %s", query.name);
+                    return;
+                }
+                addr = *reinterpret_cast<uint32_t*>(hp -> h_addr_list[0]);
+            }
+        }
+        else{
             #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
             #if JB_LIB_PLATFORM == 3
             ESP_LOGI(logTag_, "Request not to my host");
@@ -383,7 +391,7 @@ void DnsServer::voidCallback(void* const source, void* parameter)
         answer->Class = htons(1);
         answer->ttl = htonl(32);
         answer->len = htons(4);
-        answer->addr = this->replyIp_;
+        answer->addr = addr;
         sendto(this->socket_, recvBuffer, len + sizeof(struct dns_answer),
                0, (struct sockaddr*)&remotehost, socklen);
         #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE

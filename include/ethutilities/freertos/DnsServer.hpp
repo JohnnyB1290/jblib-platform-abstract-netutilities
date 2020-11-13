@@ -47,8 +47,8 @@ public:
     static DnsServer* getDnsServer();
     void start();
     void stop();
-    void addHost(char* hostName);
-    void deleteHost(char* hostName);
+    void addHost(const char* hostName, bool redirectRequest = false);
+    void deleteHost(const char* hostName);
 
 private:
     #pragma pack(push, 1)
@@ -60,10 +60,11 @@ private:
     } dns_query_t;
     #pragma pack(pop)
 
-    typedef struct
+    struct DnsHostRecord
     {
-        char name[CONFIG_JBLIB_DNS_SERVER_HOST_NAME_MAX_SIZE];
-    }DnsHost_t;
+        std::string name = "";
+        bool redirectRequest = false;
+    };
 
     static constexpr const char* logTag_ = "[ DNS Server ]";
     static DnsServer* dnsServer_;
@@ -71,7 +72,7 @@ private:
     bool isStarted_ = false;
     int socket_ = -1;
     uint32_t replyIp_ = 0;
-    std::forward_list<DnsHost_t> hostsList_;
+    std::forward_list<DnsHostRecord> hostsList_;
     xSemaphoreHandle hostsListMutex_ = xSemaphoreCreateMutex();
 
     DnsServer();
