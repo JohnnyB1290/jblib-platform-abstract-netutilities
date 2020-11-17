@@ -32,7 +32,6 @@
 
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-#include "esp_idf_version.h"
 #include "jbkernel/jb_common.h"
 #if USE_LWIP && JB_LIB_OS != 0
 #include <cstring>
