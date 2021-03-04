@@ -158,8 +158,16 @@ void DnsServer::start()
         #endif
         #endif
         #endif
+
+        #if (ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(4, 1, 0))
         tcpip_adapter_ip_info_t ipInfo;
         tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ipInfo);
+        #else
+        esp_netif_ip_info_t ipInfo;
+        esp_netif_config_t cfg = ESP_NETIF_DEFAULT_WIFI_AP();
+        auto* netif = esp_netif_get_handle_from_ifkey(cfg.base->if_key);
+        esp_netif_get_ip_info(netif, &ipInfo);
+        #endif
         this->replyIp_= ipInfo.ip.addr;
         this->socket_ = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
         if (this->socket_ == -1) {
