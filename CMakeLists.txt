@@ -9,7 +9,8 @@ set(COMPONENT_SRCS
 		"src/ethutilities/UdpChannel.cpp"
 		"src/ethutilities/WsChannel.cpp"
 		"src/ethutilities/freertos/DnsServer.cpp"
-		"src/ethutilities/freertos/UdpChannel.cpp")
+		"src/ethutilities/freertos/UdpChannel.cpp"
+		"src/ethutilities/freertos/UdpVoidChannel.cpp")
 set(COMPONENT_ADD_INCLUDEDIRS 
 		"include")
 		

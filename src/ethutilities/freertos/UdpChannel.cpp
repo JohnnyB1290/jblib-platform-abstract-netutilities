@@ -116,7 +116,7 @@ namespace jblib
 
         UdpChannel::~UdpChannel()
         {
-            if((this->socket_ < 0)){
+            if(this->socket_ > 0){
                 closesocket(this->socket_);
             }
             if(this->receiveTaskHandle_){
@@ -153,7 +153,7 @@ namespace jblib
                 ESP_LOGI(logTag_, "sendto failed: errno %d", errno);
                 #else
                 #if USE_CONSOLE
-                printf("%s recvfrom failed: errno %d\n", logTag_, errno);
+                printf("%s sendto failed: errno %d\n", logTag_, errno);
                 #endif
                 #endif
                 return;
