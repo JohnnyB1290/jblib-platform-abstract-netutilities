@@ -203,7 +203,7 @@ void DnsServer::start()
         JbController::addMainProcedure(this, nullptr,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_STACK_SIZE,
                 CONFIG_JBLIB_DNS_SERVER_THREAD_PRIORITY,
-                "DnsServer");
+                "[ DnsServer ]");
         this->isStarted_ = true;
     }
     #if CONFIG_JBLIB_DNS_SERVER_CONSOLE_ENABLE
