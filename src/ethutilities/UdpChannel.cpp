@@ -81,13 +81,17 @@ void UdpChannel::construct(uint8_t* srcIp, uint16_t srcPort,
 	this->dstPort_ = dstPort;
 	this->netif_ = netif;
 #if LWIP_IGMP == 1
-	if(ip4_addr_ismulticast(&this->dstIpaddr_))
+	if(ip4_addr_ismulticast(&this->dstIpaddr_)) {
+		if(netif) {
+			netif->flags |= NETIF_FLAG_IGMP;
+		}
 		igmp_joingroup(&this->srcIpaddr_,&this->dstIpaddr_);
+	}
 #endif
 	udp_init();
 	this->pcb_ = udp_new();
-	udp_recv(this->pcb_, recieveCallback, this);
 	udp_bind(this->pcb_, &this->srcIpaddr_, this->srcPort_);
+	udp_recv(this->pcb_, recieveCallback, this);
 }
 
 
