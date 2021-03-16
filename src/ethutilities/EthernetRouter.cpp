@@ -260,8 +260,15 @@ void EthernetRouter::routeFrames(void)
 				}
 			}
 			else{
-				if(memcmp(&frameU8[ETX_ETH_D_MAC_OFFSET], routerIface->mac, ETX_HW_SIZE) == 0){
-					if(memcmp(&frameU8[ETX_IP_DIP_OFFSET], routerIface->ip, ETX_PROTO_SIZE) == 0){
+				bool handle = memcmp(&frameU8[ETX_ETH_D_MAC_OFFSET], routerIface->mac, ETX_HW_SIZE) == 0;
+				bool mcast = false;
+				if(!handle && EthernetUtilities::getFrameType(frameU8) == ETX_ETHER_TYPE_IP) {
+					ip_addr_t addr;
+					IP4_ADDR(&addr, frameU8[ETX_IP_DIP_OFFSET], frameU8[ETX_IP_DIP_OFFSET + 1], frameU8[ETX_IP_DIP_OFFSET + 2], frameU8[ETX_IP_DIP_OFFSET + 3]);
+					mcast = ip4_addr_ismulticast(&addr);
+				}
+				if(handle || mcast){
+					if(mcast || memcmp(&frameU8[ETX_IP_DIP_OFFSET], routerIface->ip, ETX_PROTO_SIZE) == 0){
 						this->pushFrameToLwip(routerIface->netifPtr);
 					}
 					for(std::forward_list<IEthernetListener*>::iterator listenersIt =
