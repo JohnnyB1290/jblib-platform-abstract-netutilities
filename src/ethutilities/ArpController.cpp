@@ -425,7 +425,17 @@ bool ArpController::getIp(uint8_t* mac, uint8_t* ip)
 	return false;
 }
 
-
+uint32_t ArpController::getTimeAfterUpdate(uint8_t* ip)
+{
+	if(this->arpTable_.recordCounter == 0)
+		return 999;
+	for(uint32_t index = 0; index < this->arpTable_.recordCounter; index++) {
+		if(memcmp(ip, this->arpTable_.line[index].ip, ETX_PROTO_SIZE)==0) {
+			return this->arpTable_.line[index].timeAfterUpdate;
+		}
+	}
+	return 999;
+}
 
 void ArpController::voidCallback(void* const source, void* parameter)
 {

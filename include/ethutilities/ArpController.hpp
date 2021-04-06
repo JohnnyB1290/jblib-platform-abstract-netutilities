@@ -78,6 +78,7 @@ public:
 	bool isIpInTableForReply(uint8_t* ip);
 	bool getMac(uint8_t* ip, uint8_t* mac);
 	bool getIp(uint8_t* mac, uint8_t* ip);
+	uint32_t getTimeAfterUpdate(uint8_t* ip);
 	virtual void voidCallback(void* const source, void* parameter);
 	ArpTable_t* getArpTable(void);
 
