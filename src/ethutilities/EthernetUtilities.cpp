@@ -149,7 +149,7 @@ bool EthernetUtilities::createUdpHeader(uint8_t* frame, uint16_t* headerSize,
 bool EthernetUtilities::createUdpFrame(uint8_t* frame, uint16_t* frameSize,
 		uint8_t* dstIp, uint16_t dstPort, uint8_t* srcIp,
 		uint16_t srcPort, uint8_t* udpData, uint32_t dataSize,
-		uint8_t* srcMac, uint8_t* dstMac)
+		uint8_t* srcMac, uint8_t* dstMac, uint8_t ECN)
 {
 	*frameSize = ETX_UDP_DATA_OFFSET + dataSize;
 	if(dataSize > (EMAC_ETH_MAX_FLEN - ETX_UDP_DATA_OFFSET))
@@ -161,7 +161,7 @@ bool EthernetUtilities::createUdpFrame(uint8_t* frame, uint16_t* frameSize,
 	frame[ETX_ETH_ETHER_TYPE_OFFSET+1] = 0x00;//ip
 
 	frame[ETX_IP_IHL_OFFSET] = ETX_IPH_IHL_DEF_VAL;
-	frame[ETX_IP_TOS_OFFSET] = ETX_IPH_TOS_DEF_VAL;
+	frame[ETX_IP_TOS_OFFSET] = ECN;//ETX_IPH_TOS_DEF_VAL;
 	frame[ETX_IP_TOTAL_LEN_OFFSET] =
 			_HI(ETX_IP_HEADER_LEN + ETX_UDP_HEADER_LEN + dataSize);
 	frame[ETX_IP_TOTAL_LEN_OFFSET+1] =

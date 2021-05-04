@@ -110,7 +110,7 @@ public:
 	static bool createUdpFrame(uint8_t* frame, uint16_t* frameSize,
 			uint8_t* dstIp, uint16_t dstPort, uint8_t* srcIp,
 			uint16_t srcPort, uint8_t* udpData, uint32_t dataSize,
-			uint8_t* srcMac, uint8_t* dstMac);
+			uint8_t* srcMac, uint8_t* dstMac, uint8_t ECN);
 	static uint8_t* getUdpData(uint8_t* frame, uint16_t* dataSize);
 	static void changeIp(uint8_t* frame, uint8_t* newDstIp, uint8_t* newSrcIp);
 	static void maskIp(uint8_t* ip, uint8_t* mask);
