@@ -133,13 +133,22 @@ bool EthernetUtilities::createUdpHeader(uint8_t* frame, uint16_t* headerSize,
 	pseudoheader[ETX_UDPPSH_UDP_LEN_OFFSET] = _HI(dataSize + ETX_UDP_HEADER_LEN);
 	pseudoheader[ETX_UDPPSH_UDP_LEN_OFFSET+1] = _LO(dataSize + ETX_UDP_HEADER_LEN);
 
-	uint16_t checksum = calculateNetworkChecksum(frame + ETX_UDP_HEADER_OFFSET,
-			dataSize + ETX_UDP_HEADER_LEN,
-			calculateNetworkChecksum(pseudoheader, ETX_UDPPSH_PSEUDOHEADER_LEN, 0));
-	frame[ETX_UDP_CHECKSUM_OFFSET] = _HI(checksum ^ 0xffff);
-	frame[ETX_UDP_CHECKSUM_OFFSET+1] = _LO(checksum ^ 0xffff);
+	#if JB_LIB_PLATFORM == 1 //ZYNQ
+	if(dataSize <= 2){
+		frame[ETX_UDP_CHECKSUM_OFFSET] = 0;
+		frame[ETX_UDP_CHECKSUM_OFFSET+1] = 0;
+	}
+	else
+	#endif
+	{
+		uint16_t checksum = calculateNetworkChecksum(frame + ETX_UDP_HEADER_OFFSET,
+				dataSize + ETX_UDP_HEADER_LEN,
+				calculateNetworkChecksum(pseudoheader, ETX_UDPPSH_PSEUDOHEADER_LEN, 0));
+		frame[ETX_UDP_CHECKSUM_OFFSET] = _HI(checksum ^ 0xffff);
+		frame[ETX_UDP_CHECKSUM_OFFSET+1] = _LO(checksum ^ 0xffff);
+	}
 
-	checksum = calculateNetworkChecksum(frame + ETX_IP_HEADER_OFFSET,
+	uint16_t checksum = calculateNetworkChecksum(frame + ETX_IP_HEADER_OFFSET,
 			ETX_IP_HEADER_LEN, 0);
 	frame[ETX_IP_CHECKSUM_OFFSET] = _HI(checksum ^ 0xffff);
 	frame[ETX_IP_CHECKSUM_OFFSET+1] = _LO(checksum ^ 0xffff);
@@ -201,13 +210,22 @@ bool EthernetUtilities::createUdpFrame(uint8_t* frame, uint16_t* frameSize,
 
 	memcpy(frame + ETX_UDP_DATA_OFFSET, udpData, dataSize);
 
-	uint16_t checksum = calculateNetworkChecksum(frame + ETX_UDP_HEADER_OFFSET,
-			dataSize + ETX_UDP_HEADER_LEN,
-			calculateNetworkChecksum(pseudoheader, ETX_UDPPSH_PSEUDOHEADER_LEN, 0));
-	frame[ETX_UDP_CHECKSUM_OFFSET] = _HI(checksum ^ 0xffff);
-	frame[ETX_UDP_CHECKSUM_OFFSET+1] = _LO(checksum ^ 0xffff);
+	#if JB_LIB_PLATFORM == 1 //ZYNQ
+	if(dataSize <= 2){
+		frame[ETX_UDP_CHECKSUM_OFFSET] = 0;
+		frame[ETX_UDP_CHECKSUM_OFFSET+1] = 0;
+	}
+	else
+	#endif
+	{
+		uint16_t checksum = calculateNetworkChecksum(frame + ETX_UDP_HEADER_OFFSET,
+				dataSize + ETX_UDP_HEADER_LEN,
+				calculateNetworkChecksum(pseudoheader, ETX_UDPPSH_PSEUDOHEADER_LEN, 0));
+		frame[ETX_UDP_CHECKSUM_OFFSET] = _HI(checksum ^ 0xffff);
+		frame[ETX_UDP_CHECKSUM_OFFSET+1] = _LO(checksum ^ 0xffff);
+	}
 
-	checksum = calculateNetworkChecksum(frame + ETX_IP_HEADER_OFFSET,
+	uint16_t checksum = calculateNetworkChecksum(frame + ETX_IP_HEADER_OFFSET,
 			ETX_IP_HEADER_LEN, 0);
 	frame[ETX_IP_CHECKSUM_OFFSET] = _HI(checksum ^ 0xffff);
 	frame[ETX_IP_CHECKSUM_OFFSET+1] = _LO(checksum ^ 0xffff);
